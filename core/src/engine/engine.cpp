@@ -744,6 +744,33 @@ void Engine::exportar_distribucion(std::ostream& os) {
     os << "empresa,max_empleos," << maxe << "\n";
 }
 
+// Exporta una MUESTRA de agentes (1 de cada `paso`) con todos sus atributos y resultados,
+// para consulta multi-filtro en el navegador (sin explosión combinatoria de celdas).
+void Engine::exportar_muestra(std::ostream& os, int paso) {
+    if (paso < 1) paso = 1;
+    const double linea = par_.linea_pobreza_mensual;
+    os << "dpto,sexo,edad,educ,situacion,estrato,salud,hogar,etnia,migrante,urbano,"
+          "ingreso_pc,ocupado,pobre,enfermo,delito,satisfaccion,estres\n";
+    for (std::int64_t i = 0; i < p_.size(); i += paso) {
+        if (!p_.vivo[i]) continue;
+        const std::int32_t hid = p_.hogar_id[i];
+        int estrato = 0, tam = 0;
+        if (hid >= 0 && hid < h_.size()) { estrato = h_.estrato[hid]; tam = h_.tamano[hid]; }
+        const std::uint16_t mi = p_.municipio_id[i];
+        const int urbano = (mi < g_.mpio_urbano.size() && g_.mpio_urbano[mi] >= 0.5f) ? 1 : 0;
+        os << std::stoi(g_.dpto_codigo[p_.departamento_id[i]]) << ',' << static_cast<int>(p_.sexo[i]) << ','
+           << static_cast<int>(p_.edad[i]) << ',' << educ_bin(static_cast<NivelEducativo>(p_.nivel_educativo[i])) << ','
+           << situacion_bin(p_, i) << ',' << estrato << ',' << static_cast<int>(p_.afiliacion_salud[i]) << ','
+           << tam << ',' << static_cast<int>(p_.etnia[i]) << ','
+           << (p_.estatus_migratorio[i] != EstatusMigratorio::Nacional ? 1 : 0) << ',' << urbano << ','
+           << static_cast<long long>(hh_pc_[i]) << ','
+           << (p_.situacion_laboral[i] == SituacionLaboral::Ocupado ? 1 : 0) << ','
+           << (hh_pc_[i] < linea ? 1 : 0) << ',' << (p_.meses_enfermo[i] > 0 ? 1 : 0) << ','
+           << static_cast<int>(p_.es_delincuente[i]) << ',' << static_cast<int>(p_.satisfaccion_vida[i]) << ','
+           << (p_.deuda[i] > par_.umbral_estres_financiero * std::max(hh_pc_[i], 1.0f) * 12.0f ? 1 : 0) << '\n';
+    }
+}
+
 void Engine::run(std::ostream& csv) {
     csv << "anio,poblacion,edad_media,desempleo,informalidad,gini_ingreso,pobreza,pobreza_extrema,"
            "tasa_desercion,prev_enfermedad,tasa_delincuencia,cobertura_educativa,"

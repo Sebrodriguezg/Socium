@@ -105,5 +105,9 @@ int main(int argc, char** argv) {
         std::ofstream fx(ox); eng.exportar_distribucion(fx);
         std::cerr << "distribución -> " << ox << "\n";
     }
+    if (const char* om = arg(argc, argv, "--out-muestra", nullptr)) {
+        std::ofstream fm(om); eng.exportar_muestra(fm, std::atoi(arg(argc, argv, "--muestra-paso", "120")));
+        std::cerr << "muestra -> " << om << "\n";
+    }
     return 0;
 }

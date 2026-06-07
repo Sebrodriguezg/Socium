@@ -71,6 +71,30 @@
   </div>
 
   <div class="card">
+    <h3 style="margin:0 0 4px">Consulta avanzada (más filtros)</h3>
+    <p style="font-size:12px;color:#778;margin:0 0 12px">Filtra una muestra de agentes por cualquier
+      combinación. Deja "Cualquiera" lo que no quieras fijar. Resultado: promedio 2030 de quienes coinciden.</p>
+    <div class="form" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr))">
+      <div><label>Edad</label><input type="number" id="aEdad" min="0" max="100" placeholder="cualquiera"></div>
+      <div><label>Sexo</label><select id="aSexo"><option value="">Cualquiera</option><option value="0">Hombre</option><option value="1">Mujer</option></select></div>
+      <div><label>Departamento</label><select id="aDepto"><option value="">Cualquiera</option></select></div>
+      <div><label>Educación</label><select id="aEduc"><option value="">Cualquiera</option><option value="0">Baja</option><option value="1">Media</option><option value="2">Alta</option></select></div>
+      <div><label>Situación</label><select id="aSit"><option value="">Cualquiera</option><option value="2">Emp. público</option><option value="3">Emp. formal</option><option value="4">Cuenta propia</option><option value="5">Informal</option><option value="6">Desempleado</option><option value="7">Inactivo/pens.</option><option value="1">Estudiante</option></select></div>
+      <div><label>Estrato</label><select id="aEstrato"><option value="">Cualquiera</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select></div>
+      <div><label>Salud</label><select id="aSalud"><option value="">Cualquiera</option><option value="1">Contributivo</option><option value="2">Subsidiado</option><option value="0">Sin afiliación</option></select></div>
+      <div><label>Etnia</label><select id="aEtnia"><option value="">Cualquiera</option><option value="0">Ninguna</option><option value="1">Indígena</option><option value="2">Afro (NARP)</option></select></div>
+      <div><label>¿Migrante?</label><select id="aMig"><option value="">Cualquiera</option><option value="0">No</option><option value="1">Sí</option></select></div>
+      <div><label>Zona</label><select id="aUrb"><option value="">Cualquiera</option><option value="1">Urbana</option><option value="0">Rural</option></select></div>
+      <button onclick="consultarAvanzado()">Calcular</button>
+    </div>
+    <div id="aMsg" style="font-size:13px;color:#556;margin-top:8px"></div>
+    <table id="aTabla" style="display:none">
+      <thead><tr><th>Indicador (2030)</th><th class="sc-base">Continuidad</th><th class="sc-cepeda">Cepeda</th><th class="sc-dle">De la Espriella</th></tr></thead>
+      <tbody id="aTbody"></tbody>
+    </table>
+  </div>
+
+  <div class="card">
     <h3 style="margin:0 0 12px">Mapa de Colombia por departamento</h3>
     <div class="form" style="grid-template-columns:repeat(3,1fr)">
       <div><label>Indicador</label><select id="mMet">
@@ -143,6 +167,61 @@ function render(){
     tr.innerHTML=html; tb.appendChild(tr);
   });
 }
+// ---------- CONSULTA AVANZADA (muestra multi-filtro) ----------
+let MUESTRA=null, MCAMPOS=null, MIDX={};
+async function initMuestra(){
+  MUESTRA=await (await fetch("data/muestra.json")).json();
+  MCAMPOS=MUESTRA.campos; MCAMPOS.forEach((c,i)=>MIDX[c]=i);
+  const deptos=await (await fetch("data/departamentos.json")).json();
+  const sel=document.getElementById("aDepto");
+  Object.entries(deptos).sort((a,b)=>a[1].localeCompare(b[1])).forEach(([cod,nom])=>{
+    const o=document.createElement("option"); o.value=parseInt(cod); o.textContent=nom; sel.appendChild(o);});
+}
+function consultarAvanzado(){
+  const edad=document.getElementById("aEdad").value;
+  const F={sexo:"aSexo",dpto:"aDepto",educ:"aEduc",situacion:"aSit",estrato:"aEstrato",
+           salud:"aSalud",etnia:"aEtnia",migrante:"aMig",urbano:"aUrb"};
+  const crit=[];
+  for(const campo in F){ const v=document.getElementById(F[campo]).value;
+    if(v!=="") crit.push([MIDX[campo], parseInt(v)]); }
+  const ed = edad!=="" ? parseInt(edad) : null;
+  const iE=MIDX["edad"], iIng=MIDX["ingreso_pc"];
+  const cols=[["pobre","prob. de ser pobre",100,"%"],["ocupado","prob. de estar ocupado",100,"%"],
+    ["enfermo","prob. de enfermar",100,"%"],["delito","prob. delincuencia",100,"%"],
+    ["estres","estrés financiero (deuda)",100,"%"]];
+  const msg=document.getElementById("aMsg"); let nmin=1e9;
+  const res={};
+  for(const esc of MUESTRA.escenarios){
+    const arr=MUESTRA.datos[esc]; let n=0, ing=0, acc={};
+    cols.forEach(c=>acc[c[0]]=0); let sat=0;
+    for(const row of arr){
+      if(ed!==null && Math.abs(row[iE]-ed)>7) continue;
+      let ok=true; for(const [idx,val] of crit){ if(row[idx]!==val){ok=false;break;} }
+      if(!ok) continue;
+      n++; ing+=row[iIng]; sat+=row[MIDX["satisfaccion"]];
+      cols.forEach(c=>acc[c[0]]+=row[MIDX[c[0]]]);
+    }
+    res[esc]={n, ing:n?ing/n*1000:0, sat:n?sat/n:0, acc:Object.fromEntries(cols.map(c=>[c[0],n?acc[c[0]]/n:0]))};
+    nmin=Math.min(nmin,n);
+  }
+  if(nmin<10){ msg.textContent=`Muy pocos agentes coinciden (${nmin}). Quita algún filtro.`;
+    document.getElementById("aTabla").style.display="none"; return; }
+  msg.textContent=`Promedio de ${res.baseline.n} agentes con ese perfil (muestra).`;
+  const tb=document.getElementById("aTbody"); tb.innerHTML="";
+  const ESC3=["baseline","cepeda","de_la_espriella"];
+  function fila(lab,fn,mejorAlto){
+    const vals=ESC3.map(e=>fn(res[e])); const best=mejorAlto?Math.max(...vals):Math.min(...vals);
+    let h=`<td>${lab}</td>`; vals.forEach((v,k)=>h+=`<td class="${v===best?'best':''}">${fmt(lab,v)}</td>`);
+    const tr=document.createElement("tr"); tr.innerHTML=h; tb.appendChild(tr);
+  }
+  function fmt(lab,v){ if(lab.includes("Ingreso")) return "$"+Math.round(v).toLocaleString("es-CO");
+    if(lab.includes("Satisf")) return v.toFixed(1); return (v*100).toFixed(1)+"%"; }
+  fila("Ingreso por persona", r=>r.ing, true);
+  cols.forEach(c=>fila(c[1], r=>r.acc[c[0]], c[0]==="ocupado"));
+  fila("Satisfacción (0-10)", r=>r.sat, true);
+  document.getElementById("aTabla").style.display="table";
+}
+
 // ---------- MAPA COROPLÉTICO ----------
 const MAPMET={ ingreso_pc:["Ingreso por persona",true], p_ocupado:["Ocupación",true],
   p_pobreza:["Pobreza",false], p_enfermo:["Enfermedad",false],
@@ -212,6 +291,7 @@ async function initMapa(){
 
 init();
 initMapa();
+initMuestra();
 </script>
 </body>
 </html>

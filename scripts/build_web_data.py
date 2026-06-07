@@ -67,6 +67,28 @@ def main():
     size = (WEBDATA / "perfiles.json").stat().st_size / 1024
     print(f"OK -> web/data/perfiles.json ({size:.0f} KB, {len(perfiles)} perfiles), departamentos.json ({len(deptos)})")
 
+    # --- muestra de agentes para consulta multi-filtro (snapshot año final) ---
+    mfile = RUNS / "muestra_baseline.csv"
+    if mfile.exists():
+        ESC = ["baseline", "cepeda", "de_la_espriella"]
+        campos = None; muestra = {}
+        for esc in ESC:
+            f = RUNS / f"muestra_{esc}.csv"
+            if not f.exists(): continue
+            rd = csv.reader(open(f)); campos = next(rd)
+            ii = campos.index("ingreso_pc")
+            filas = []
+            for row in rd:
+                v = [int(x) for x in row]
+                v[ii] = v[ii] // 1000          # ingreso en miles de COP (compacto)
+                filas.append(v)
+            muestra[esc] = filas
+        (WEBDATA / "muestra.json").write_text(
+            json.dumps({"campos": campos, "escenarios": ESC, "datos": muestra},
+                       separators=(",", ":")), encoding="utf-8")
+        mb = (WEBDATA / "muestra.json").stat().st_size / 1024
+        print(f"OK -> web/data/muestra.json ({mb:.0f} KB, {len(muestra.get('baseline',[]))} agentes/escenario)")
+
 
 if __name__ == "__main__":
     main()

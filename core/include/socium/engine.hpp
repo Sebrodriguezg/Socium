@@ -71,6 +71,7 @@ public:
     MetricasAnuales medir(int anio);
     void exportar_departamentos(std::ostream& os);  // métricas por departamento (estado actual)
     void exportar_distribucion(std::ostream& os);   // concentración de ingreso + tamaño de empresas (stylized facts)
+    void exportar_muestra(std::ostream& os, int paso); // muestra de agentes (atributos+resultados) p/ consulta multi-filtro
     // Activa la exportación de PERFILES (depto×sexo×edad×educación) por año -> consulta pública.
     void set_salida_perfiles(std::ostream* os) { perfiles_ = os; }
     // Activa la red social explícita (efecto de pares en crimen y opinión).
