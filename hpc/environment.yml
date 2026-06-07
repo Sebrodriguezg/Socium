@@ -1,0 +1,33 @@
+# Entorno de desarrollo/ejecución de Socium (sin sudo, vía conda).
+# Crear:      conda env create -f hpc/environment.yml
+# Actualizar: conda env update -f hpc/environment.yml --prune
+# Activar:    conda activate socium
+name: socium
+channels:
+  - conda-forge
+dependencies:
+  # --- Build del núcleo C++ ---
+  - python>=3.11
+  - cmake            # falta en el sistema
+  - ninja            # generador de build rápido
+  - ccache           # acelera recompilaciones
+  - make
+  - pybind11         # puente C++ <-> Python
+  - git-lfs          # para los PDFs de articles/
+  # --- Análisis / Python (paquete socium) ---
+  - numpy
+  - scipy
+  - pandas
+  - matplotlib
+  - h5py
+  - networkx
+  - numba
+  - cython
+  - pyyaml           # configs de experimentos
+  # --- MPI (opcional; trae su propio runtime, ver nota en hpc/README.md) ---
+  - mpi4py
+  # --- Dev tooling ---
+  - pytest
+  - ruff
+  - mypy
+  - jupyterlab
