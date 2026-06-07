@@ -45,7 +45,7 @@ politicas:
     politica_drogas:      {valor: "continuidad", fuente: "", afecta_A: [cultivos_ilicitos]}
 
   ambiente_productivo:
-    transicion_energetica:{valor: "continuidad", fuente: "", afecta_A: [emisiones_de_co_eq, deforestacion]}
+    transicion_energetica: {valor: "continuidad", fuente: "", afecta_A: [emisiones_de_co_eq, deforestacion]}
     modelo_productivo:    {valor: "continuidad", fuente: "", afecta_A: [pib, pib_por_sectores]}
 
   migracion:

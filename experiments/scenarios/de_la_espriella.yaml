@@ -6,12 +6,51 @@ escenario:
   nombre: "Programa de gobierno — Abelardo de la Espriella"
   candidato: "Abelardo de la Espriella"
   hereda: _plantilla.yaml
-  fuente_programa: ""        # TODO: URL/archivo del programa oficial
+  fuente_programa: "https://defensoresdelapatria.com/wp-content/uploads/2026/04/PROPUESTAS-DEL-TIGRE.pdf"
   fecha_base: "2026-06-06"
   horizonte_anios: 4
 
-# TODO: a partir del programa oficial, sobreescribir aquí las palancas que cambien.
-# Ejemplo de formato (NO usar valores sin respaldo del documento):
-#   seguridad:
-#     enfoque: {valor: "mano_dura", fuente: "Programa, p.XX: ..."}
-politicas: {}
+# Palancas mapeadas desde docs/escenarios/fuentes/de_la_espriella.md (fuentes públicas).
+# valor: multiplicador vs baseline salvo etiqueta. `supuesto` = traducción de modelo.
+politicas:
+
+  fiscal:
+    impuesto_renta_top:   {valor: 0.9, fuente: "ElTiempo", supuesto: "baja renta corporativa a 'generadores de empleo'; mas recaudo via eliminar exenciones sin subir tarifas"}
+    regla_fiscal:         {valor: "ajuste_fuerte", fuente: "ElTiempo", supuesto: "reduccion del Estado 40%, ahorro 25-30 billones COP"}
+    zonas_economicas_especiales: {valor: true, fuente: "ElTiempo", afecta_A: [pib, recaudo_tributario]}
+
+  transferencias:
+    monto_per_capita:     {valor: 0.85, fuente: "", supuesto: "reduccion del Estado; transferencias generales focalizadas a la baja"}
+    cobertura:            {valor: 0.85, fuente: "", supuesto: "focalizacion estricta"}
+    focalizacion_sisben:  {valor: "estricta", fuente: "ElTiempo"}
+    madres_cabeza_hogar:  {valor: 600000, unidad: "COP/mes", fuente: "ElTiempo"}
+    subsidio_vivienda_max: {valor: 52000000, unidad: "COP", fuente: "ElTiempo", afecta_A: [deficit_habitacional]}
+
+  laboral:
+    salario_minimo_real:  {valor: 1.0, fuente: "", supuesto: "economia libertaria: minimo de mercado, sin aumentos reales grandes"}
+    formalizacion:        {valor: 1.15, fuente: "ElTiempo", supuesto: "meta 3M empleos via reduccion de impuestos a empresas"}
+    empleo_publico:       {valor: 0.6, fuente: "ElTiempo", supuesto: "reduccion del aparato estatal 40%"}
+
+  educacion:
+    inversion_pib:        {valor: 1.0, fuente: "ElTiempo", supuesto: "eficiencia/merito, no expansion de gasto"}
+    gratuidad_superior:   {valor: false, fuente: "ElTiempo", supuesto: "becas condonables por servicio social, no gratuidad universal"}
+    cobertura_objetivo:   {valor: "merito_dual", fuente: "ElTiempo"}
+
+  salud:
+    modelo:               {valor: "mercado_app_liquidacion_eps", fuente: "ElTiempo", supuesto: "modernizacion por APP, liquidar EPS incumplidas, choque 10 billones"}
+    inversion_pib:        {valor: 1.0, fuente: "", supuesto: "estimado"}
+
+  pensional:
+    reforma:              {valor: "no_especificado", fuente: "", supuesto: "no detallado en fuentes"}
+
+  seguridad:
+    enfoque:              {valor: "mano_dura", fuente: "ElTiempo", supuesto: "recuperacion territorial 90 dias, 7 megacarceles, no negociacion"}
+    gasto_defensa:        {valor: 1.3, fuente: "ElTiempo", supuesto: "Plan Colombia II; magnitud estimada"}
+    politica_drogas:      {valor: "fumigacion", fuente: "ElTiempo", supuesto: "330.000 ha fumigadas"}
+
+  ambiente_productivo:
+    transicion_energetica: {valor: "fosil_fracking", fuente: "ElTiempo", supuesto: "autorizacion de fracking, mineria organizada"}
+    modelo_productivo:    {valor: "libertario_extractivo_zee", fuente: "ElTiempo", supuesto: "meta crecimiento 7% anual"}
+
+  migracion:
+    regularizacion:       {valor: "control", fuente: "", supuesto: "no especificado en fuentes; estimado"}

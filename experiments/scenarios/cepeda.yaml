@@ -6,12 +6,47 @@ escenario:
   nombre: "Programa de gobierno — Iván Cepeda"
   candidato: "Iván Cepeda"
   hereda: _plantilla.yaml
-  fuente_programa: ""        # TODO: URL/archivo del programa oficial
+  fuente_programa: "https://www.movimientopactohistorico.co/programa-gobierno"
   fecha_base: "2026-06-06"
   horizonte_anios: 4
 
-# TODO: a partir del programa oficial, sobreescribir aquí las palancas que cambien.
-# Ejemplo de formato (NO usar valores sin respaldo del documento):
-#   fiscal:
-#     impuesto_renta_top: {valor: 1.15, fuente: "Programa, p.XX: ...", supuesto: ""}
-politicas: {}
+# Palancas mapeadas desde docs/escenarios/fuentes/cepeda.md (fuentes públicas, jun 2026).
+# valor: multiplicador vs baseline salvo etiqueta. `supuesto` = traducción de modelo
+# donde el programa no da cifra. PENDIENTE verificar contra programa oficial (433 pp).
+politicas:
+
+  fiscal:
+    impuesto_renta_top:   {valor: 1.0, fuente: "", supuesto: "El programa no detalla reforma tributaria con cifras en las fuentes consultadas; se mantiene baseline pendiente de verificar"}
+    impuesto_patrimonio:  {valor: 1.0, fuente: "", supuesto: "no especificado"}
+    regla_fiscal:         {valor: "austeridad_republicana", fuente: "ElEspectador"}
+
+  transferencias:
+    monto_per_capita:     {valor: 1.2, fuente: "ElTiempo", supuesto: "ampliación Renta Ciudadana/Joven; magnitud estimada"}
+    cobertura:            {valor: 1.3, fuente: "ElTiempo", supuesto: "Colombia Mayor 3M->5M beneficiarios (+67% en ese programa)"}
+    banco_del_pueblo:     {valor: true, fuente: "ElEspectador", afecta_A: [pobreza_monetaria]}
+
+  laboral:
+    salario_minimo_real:  {valor: 1.23, fuente: "ElEspectador", supuesto: "'salario vital +23%' interpretado como aumento real del minimo"}
+    formalizacion:        {valor: 1.1, fuente: "", supuesto: "orientacion del programa; magnitud estimada"}
+
+  educacion:
+    inversion_pib:        {valor: 1.2, fuente: "ElEspectador", supuesto: "fortalecer universidad publica; magnitud estimada"}
+    gratuidad_superior:   {valor: true, fuente: "ElEspectador"}
+
+  salud:
+    modelo:               {valor: "reforma_estatista_ebs", fuente: "ElTiempo", supuesto: "Equipos Basicos de Salud, hospital publico como eje"}
+    inversion_pib:        {valor: 1.15, fuente: "", supuesto: "estimado"}
+
+  pensional:
+    reforma:              {valor: "continuidad_pilares", fuente: "", supuesto: "continuar reforma pensional vigente; no detallado"}
+
+  seguridad:
+    enfoque:              {valor: "seguridad_humana_paz_total", fuente: "ElTiempo"}
+    politica_drogas:      {valor: "enfoque_social_sin_fumigacion", fuente: "", supuesto: "coherente con Paz Total; no detallado"}
+
+  ambiente_productivo:
+    transicion_energetica: {valor: "acelerada", fuente: "", supuesto: "orientacion Pacto Historico; verificar"}
+    modelo_productivo:    {valor: "agroalimentario_reforma_agraria", fuente: "Semana", supuesto: "1M ha redistribuidas, 30.000 km vias terciarias"}
+
+  migracion:
+    regularizacion:       {valor: "ampliada", fuente: "", supuesto: "no especificado en fuentes; estimado"}
