@@ -80,9 +80,10 @@ std::int64_t Geography::cargar_pesos(const std::string& path) {
     std::ifstream in(path);
     if (!in) throw std::runtime_error("no se pudo abrir municipios.csv: " + path);
     mpio_peso.assign(mpio_codigo.size(), 0.0);
+    mpio_urbano.assign(mpio_codigo.size(), 0.7f);   // default si el archivo no trae pct
 
     std::string line;
-    std::getline(in, line); // encabezado: cod_mpio,poblacion_5_16,...
+    std::getline(in, line); // encabezado: cod_mpio,poblacion_total,...,pct_urbano
     std::int64_t con_peso = 0;
     while (std::getline(in, line)) {
         if (line.empty()) continue;
@@ -92,6 +93,7 @@ std::int64_t Geography::cargar_pesos(const std::string& path) {
         if (it == idx_mpio.end()) continue;
         const double w = to_float(f[1]);
         if (w > 0.0) { mpio_peso[it->second] = w; ++con_peso; }
+        if (f.size() >= 5) mpio_urbano[it->second] = to_float(f[4]) / 100.0f;  // pct_urbano
     }
     return con_peso;
 }

@@ -21,7 +21,8 @@ struct Geography {
     std::vector<std::uint8_t>  mpio_dpto;   // índice del departamento
     std::vector<float>         mpio_lon;
     std::vector<float>         mpio_lat;
-    std::vector<double>        mpio_peso;  // proxy de tamaño poblacional (pob. 5-16)
+    std::vector<double>        mpio_peso;     // tamaño poblacional (población total)
+    std::vector<float>         mpio_urbano;   // fracción urbana [0,1] (pct cabecera/100)
 
     // búsqueda por código DANE
     std::unordered_map<std::string, std::uint8_t>  idx_dpto;

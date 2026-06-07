@@ -28,13 +28,15 @@ struct Parametros {
     Real prob_base_enfermar_mensual = 0.02;    // supuesto, calibrar
     Real perdida_productividad_enfermo = 0.4;  // supuesto
 
-    // --- M5 delincuencia (riesgos relativos; base se normaliza a la tasa real) ---
-    Real crimen_prob_base = 0.01;      // supuesto, ancla a homicidios/hurtos municipales
-    Real rr_nini = 2.5;
-    Real rr_pobreza = 2.0;
-    Real rr_baja_educacion = 1.8;
-    Real rr_hombre_joven = 3.0;
-    Real prob_abandono_delito = 0.10;  // supuesto: salir del delito por año (con oportunidades)
+    // --- M5 delincuencia (riesgos relativos = exp(β) de spec §6.4; base se normaliza
+    //     a la tasa real de homicidios/hurtos municipales) ---
+    Real crimen_prob_base = 0.01;      // ancla a homicidios/hurtos municipales (Med.Legal)
+    Real rr_nini = 2.34;               // exp(0.85) — desempleo largo / nini
+    Real rr_pobreza = 1.86;            // exp(0.62) — estrato bajo
+    Real rr_baja_educacion = 1.79;     // exp(0.58) — deserción <9°
+    Real rr_hombre_joven = 3.0;        // estructura etaria-sexo del delito
+    Real rr_presencia_gao = 3.06;      // exp(1.12) — presencia GAO (requiere dataset; aún no aplicado)
+    Real prob_abandono_delito = 0.10;  // salir del delito por año (con oportunidades)
 
     // --- M6 movilidad ---
     Real persistencia_intergeneracional = 0.6; // supuesto, ELCA

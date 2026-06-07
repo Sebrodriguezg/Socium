@@ -166,15 +166,21 @@ void Engine::mercado_laboral() {
         double pdesemp = par_.desempleo_objetivo * (anios >= 11 ? 0.8 : 1.4);
         if (uniform01() < pdesemp) { p_.situacion_laboral[i] = SituacionLaboral::Desocupado; p_.ingreso_laboral[i] = 0; continue; }
 
-        // ocupado: ingreso Mincer + residual lognormal (dispersión salarial real)
+        // ocupado: ingreso Mincer + residual lognormal (dispersión salarial real;
+        // sigma alto reproduce Gini ~0.5 y cola de Pareto, spec §1.4/§7.3)
         p_.situacion_laboral[i] = SituacionLaboral::Ocupado;
         const int exper = std::max(0, edad - anios - 6);
-        std::normal_distribution<double> ruido(0.0, 0.55);   // residual de Mincer
+        std::normal_distribution<double> ruido(0.0, 0.80);   // residual de Mincer
         double ln = par_.retorno_anual_escolaridad * (anios - 11) + 0.03 * exper
                   - 0.0004 * exper * exper + ruido(thread_rng());
         double ingreso = par_.smlv * pol_.smlv_mult * std::exp(ln);
-        // informalidad (M3): mayor a menor educación (calibrada a ~57% nacional)
-        p_.informal[i] = (uniform01() < (anios < 11 ? 0.66 : 0.30)) ? 1 : 0;
+        // informalidad (M3): por urbano/rural real del municipio (spec §2.4:
+        // urbano 43%, rural 84.7%) modulada por educación
+        const std::uint16_t mi = p_.municipio_id[i];
+        double urb = (mi < g_.mpio_urbano.size()) ? g_.mpio_urbano[mi] : 0.7;
+        double p_inf = (0.847 - 0.417 * urb) * (anios < 11 ? 1.15 : 0.75);
+        p_inf = std::min(0.95, std::max(0.05, p_inf));
+        p_.informal[i] = (uniform01() < p_inf) ? 1 : 0;
         if (p_.informal[i]) ingreso *= (1.0 - par_.penalizacion_informalidad);
         if (p_.sexo[i] == Sexo::Mujer) ingreso *= (1.0 - par_.brecha_genero);
         if (p_.es_delincuente[i]) ingreso *= 0.7;     // menor inserción laboral formal
