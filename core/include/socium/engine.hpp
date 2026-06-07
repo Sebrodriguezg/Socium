@@ -47,7 +47,8 @@ struct MetricasAnuales {
     Real edad_media = 0, desempleo = 0, informalidad = 0, gini_ingreso = 0,
          pobreza = 0, tasa_desercion = 0, prev_enfermedad = 0,
          tasa_delincuencia = 0, cobertura_educativa = 0,
-         pib_index = 0, crecimiento = 0, tasa_migracion = 0;
+         pib_index = 0, crecimiento = 0, tasa_migracion = 0,
+         satisfaccion_media = 0, polarizacion = 0;
 };
 
 class Engine {
@@ -66,6 +67,7 @@ private:
     void salud_mensual();       // M4 mensual
     void delincuencia();        // M5 anual
     void migracion();           // M-migración: gravedad, huye del conflicto (§6.3)
+    void opinion();             // M-opinión/bienestar/radicalización (§6.6)
     void economia_mensual();    // economía (KWEM) mensual
     void cerrar_macro();        // §8 paso 12: agrega PIB/empleo y realimenta el ciclo
     void recomputar_ingreso_hogar();

@@ -60,6 +60,10 @@ struct Parametros {
     Real push_conflicto = 4.0;               // el conflicto del origen empuja (desplazamiento forzado)
     Real gravity_alpha = 0.85;               // exponente de masa poblacional del destino
 
+    // --- M-opinión / bienestar / radicalización (spec §6.6) ---
+    Real conformidad_social = 0.30;          // J: fuerza de conformidad con el municipio
+    Real peso_seguridad_bienestar = 3.0;     // cuánto pesa el conflicto local en la satisfacción
+
     // --- líneas de referencia ---
     Real linea_pobreza_mensual = 435'000.0;  // línea de pobreza monetaria per cápita (DANE 2023)
 };

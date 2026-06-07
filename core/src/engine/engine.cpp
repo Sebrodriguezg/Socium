@@ -294,6 +294,54 @@ void Engine::migracion() {
     }
 }
 
+// M-opinión / bienestar subjetivo / radicalización (spec §6.6).
+// Actualiza la satisfacción con la vida (0-10) según condiciones reales del agente y
+// mueve la opinión política por conformidad con el municipio + estrés económico (que
+// empuja a los extremos = polarización/radicalización).
+void Engine::opinion() {
+    const std::int64_t N = p_.size();
+    const std::int64_t M = g_.n_municipios();
+
+    // media de opinión por municipio (campo social local)
+    std::vector<double> som(static_cast<std::size_t>(M), 0.0);
+    std::vector<std::int64_t> cnt(static_cast<std::size_t>(M), 0);
+    for (std::int64_t i = 0; i < N; ++i) {
+        if (!p_.vivo[i]) continue;
+        som[p_.municipio_id[i]] += p_.opinion_politica[i];
+        cnt[p_.municipio_id[i]]++;
+    }
+    std::vector<float> media(static_cast<std::size_t>(M), 0.0f);
+    for (std::int64_t m = 0; m < M; ++m) if (cnt[m]) media[m] = static_cast<float>(som[m] / cnt[m]);
+
+    const float linea = static_cast<float>(par_.linea_pobreza_mensual);
+    #pragma omp parallel for schedule(static)
+    for (std::int64_t i = 0; i < N; ++i) {
+        if (!p_.vivo[i]) continue;
+        const std::uint16_t mi = p_.municipio_id[i];
+        const double conf = (mi < g_.mpio_conflicto.size()) ? g_.mpio_conflicto[mi] : 0.0;
+
+        // --- satisfacción con la vida (bienestar subjetivo, dominio 15) ---
+        double sat = 5.0;
+        sat += (hh_pc_[i] >= linea) ? 1.5 : -2.5;
+        if (p_.meses_enfermo[i] > 0) sat -= 1.5;
+        if (p_.situacion_laboral[i] == SituacionLaboral::Ocupado) sat += 1.0;
+        else if (p_.situacion_laboral[i] == SituacionLaboral::Desocupado) sat -= 1.0;
+        sat -= par_.peso_seguridad_bienestar * conf;
+        sat += 2.0 * crecimiento_;                       // el ciclo macro mejora el ánimo
+        sat = std::min(10.0, std::max(0.0, sat));
+        // suavizado (memoria del estado anterior)
+        p_.satisfaccion_vida[i] = static_cast<std::uint8_t>(0.5 * p_.satisfaccion_vida[i] + 0.5 * sat);
+
+        // --- opinión política: conformidad + estrés que radicaliza ---
+        double op = p_.opinion_politica[i];
+        op += par_.conformidad_social * (media[mi] - op);   // conformidad con el entorno
+        const bool estres = (hh_pc_[i] < linea) || (p_.situacion_laboral[i] == SituacionLaboral::Desocupado) || (conf > 0.3);
+        if (estres) op += (op >= 0 ? 1.0 : -1.0) * 6.0 * (0.5 + conf);  // empuja al extremo
+        op = std::min(100.0, std::max(-100.0, op));
+        p_.opinion_politica[i] = static_cast<std::int8_t>(op);
+    }
+}
+
 void Engine::economia_mensual() {
     EconomyParams ep;
     ep.rule = cfg_.regla_economia;
@@ -327,11 +375,14 @@ MetricasAnuales Engine::medir(int anio) {
     MetricasAnuales m; m.anio = anio;
     std::int64_t vivos = 0, ocup = 0, desoc = 0, inf = 0, enfermos = 0, delinc = 0,
                  escolar = 0, asisten = 0, pobres = 0;
-    long double suma_edad = 0;
+    long double suma_edad = 0, suma_sat = 0, suma_op = 0, suma_op2 = 0;
     std::vector<float> ingresos;
     for (std::int64_t i = 0; i < N; ++i) {
         if (!p_.vivo[i]) continue;
         ++vivos; suma_edad += p_.edad[i];
+        suma_sat += p_.satisfaccion_vida[i];
+        suma_op += p_.opinion_politica[i];
+        suma_op2 += static_cast<long double>(p_.opinion_politica[i]) * p_.opinion_politica[i];
         if (p_.situacion_laboral[i] == SituacionLaboral::Ocupado)   { ++ocup; ingresos.push_back(p_.ingreso_laboral[i]); inf += p_.informal[i]; }
         if (p_.situacion_laboral[i] == SituacionLaboral::Desocupado) ++desoc;
         if (p_.meses_enfermo[i] > 0) ++enfermos;
@@ -358,6 +409,11 @@ MetricasAnuales Engine::medir(int anio) {
     m.pib_index = static_cast<double>(tot) / pib_base_;
     m.crecimiento = crecimiento_;
     m.tasa_migracion = vivos ? static_cast<Real>(migraciones_anio_) / vivos : 0;
+    if (vivos) {
+        m.satisfaccion_media = static_cast<Real>(suma_sat / vivos);
+        const long double med = suma_op / vivos;
+        m.polarizacion = static_cast<Real>(std::sqrt(std::max(0.0L, suma_op2 / vivos - med * med)));
+    }
     return m;
 }
 
@@ -366,13 +422,13 @@ static void escribir_fila(std::ostream& os, const MetricasAnuales& m) {
        << m.informalidad << "," << m.gini_ingreso << "," << m.pobreza << ","
        << m.tasa_desercion << "," << m.prev_enfermedad << "," << m.tasa_delincuencia << ","
        << m.cobertura_educativa << "," << m.pib_index << "," << m.crecimiento << ","
-       << m.tasa_migracion << "\n";
+       << m.tasa_migracion << "," << m.satisfaccion_media << "," << m.polarizacion << "\n";
 }
 
 void Engine::run(std::ostream& csv) {
     csv << "anio,poblacion,edad_media,desempleo,informalidad,gini_ingreso,pobreza,"
            "tasa_desercion,prev_enfermedad,tasa_delincuencia,cobertura_educativa,"
-           "pib_index,crecimiento,tasa_migracion\n";
+           "pib_index,crecimiento,tasa_migracion,satisfaccion_media,polarizacion\n";
 
     // estado inicial (año base): fijar empleo/ingreso primero
     mercado_laboral();
@@ -388,6 +444,7 @@ void Engine::run(std::ostream& csv) {
         delincuencia();          // M5
         migracion();             // M-migración (§6.3)
         recomputar_ingreso_hogar();   // hogares cambiaron por migración
+        opinion();               // M-opinión/bienestar (§6.6)
         for (int paso = 0; paso < cfg_.pasos_por_anio; ++paso) {
             salud_mensual();     // M4
             economia_mensual();  // KWEM
