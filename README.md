@@ -1,0 +1,2 @@
+# Socium
+Socium solver 
