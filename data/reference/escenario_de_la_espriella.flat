@@ -9,3 +9,5 @@ smlv_mult 1
 empleo_mult 1.15
 impuesto_mult 0.9
 gasto_mult 0.8
+boost_agro 1
+boost_mineria 1.5

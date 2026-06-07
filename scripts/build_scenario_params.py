@@ -74,6 +74,13 @@ def mapear(pol: dict) -> dict:
     elif isinstance(regla, str) and "austeridad" in regla: k["gasto_mult"] = 0.95
     else:                                   k["gasto_mult"] = 1.0
 
+    # --- modelo productivo -> impulsos sectoriales (insumo-producto) ---
+    k["boost_agro"] = 1.0; k["boost_mineria"] = 1.0
+    modelo = lever(pol, "ambiente_productivo", "modelo_productivo", default="continuidad")
+    if isinstance(modelo, str):
+        if "agroalimentario" in modelo or "agraria" in modelo: k["boost_agro"] = 1.30
+        if "extractiv" in modelo or "fosil" in modelo or "mineria" in modelo: k["boost_mineria"] = 1.50
+
     return k
 
 

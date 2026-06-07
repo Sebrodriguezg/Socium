@@ -44,6 +44,8 @@ struct Politicas {
     double empleo_mult           = 1.0;  // participación/empleo (M3)
     double impuesto_mult         = 1.0;  // tasa tributaria (fiscal)
     double gasto_mult            = 1.0;  // gasto público base (fiscal)
+    double boost_agro            = 1.0;  // impulso de demanda al sector agro (insumo-producto)
+    double boost_mineria         = 1.0;  // impulso de demanda al sector minero/extractivo
 
     static Politicas load(const std::string& path);  // archivo key=value
 };
@@ -82,6 +84,7 @@ private:
     void delincuencia();        // M5 anual
     void migracion();           // M-migración: gravedad, huye del conflicto (§6.3)
     void finanzas();            // crédito de hogares: gota a gota / formal, estrés financiero
+    void actualizar_produccion(); // insumo-producto (Leontief): propaga impulsos sectoriales
     void opinion();             // M-opinión/bienestar/radicalización (§6.6)
     void dinamica_empresas();   // §3: extorsión, quiebra y entrada de empresas
     void economia_mensual();    // economía (KWEM) mensual
@@ -108,6 +111,8 @@ private:
     double recaudo_pib_ = 0.0, deficit_pib_ = 0.0, deuda_pib_ = 0.0;  // últimos ratios fiscales
     std::ostream* perfiles_ = nullptr;  // salida opcional de perfiles por año
     const Network* red_ = nullptr;      // red social explícita (opcional)
+    double sector_output_[7] = {1,1,1,1,1,1,1};  // índice de producción por sector (insumo-producto)
+    double xbase_[7] = {0,0,0,0,0,0,0};          // producción base por sector (referencia)
     std::int32_t next_hogar_id_ = 0;  // siguiente id de hogar (para migrantes)
     std::int64_t migraciones_anio_ = 0;
 };

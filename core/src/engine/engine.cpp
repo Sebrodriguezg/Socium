@@ -25,6 +25,30 @@ static NivelEducativo nivel_por_anios(int a) {
     if (a <= 16) return NivelEducativo::Universitario;
     return NivelEducativo::Posgrado;
 }
+// --- Insumo-producto (Leontief) ---
+// Sectores: 0 Agro, 1 Comercio, 2 Industria, 3 Servicios, 4 Construcción, 5 Minería, 6 Otro.
+// A_io[i][j] = insumo del sector i por unidad de producto del sector j (coef. técnicos).
+static const double A_io[7][7] = {
+/*Agro*/ {0.06, 0.05, 0.15, 0.03, 0.01, 0.00, 0.02},
+/*Com */ {0.04, 0.05, 0.05, 0.05, 0.04, 0.03, 0.04},
+/*Ind */ {0.08, 0.10, 0.12, 0.07, 0.18, 0.06, 0.06},
+/*Serv*/ {0.06, 0.10, 0.08, 0.10, 0.07, 0.08, 0.08},
+/*Cons*/ {0.00, 0.01, 0.01, 0.02, 0.02, 0.01, 0.01},
+/*Min */ {0.01, 0.01, 0.10, 0.02, 0.10, 0.05, 0.08},
+/*Otro*/ {0.04, 0.05, 0.05, 0.05, 0.04, 0.05, 0.05},
+};
+static const double VA_SHARE[7] = {0.08, 0.18, 0.12, 0.30, 0.06, 0.05, 0.21}; // demanda base
+// Resuelve X = d + A·X (Leontief) por iteración de punto fijo.
+static void leontief(const double d[7], double X[7]) {
+    for (int i = 0; i < 7; ++i) X[i] = d[i];
+    for (int it = 0; it < 30; ++it) {
+        double nx[7];
+        for (int i = 0; i < 7; ++i) { double s = d[i];
+            for (int j = 0; j < 7; ++j) s += A_io[i][j] * X[j]; nx[i] = s; }
+        for (int i = 0; i < 7; ++i) X[i] = nx[i];
+    }
+}
+
 // mortalidad anual por edad (Gompertz aprox.; calibrar con tablas de vida DANE).
 // ~0.55% crudo con esta estructura etaria y esperanza de vida ~78.
 static double p_morir(int edad) {
@@ -52,6 +76,8 @@ Politicas Politicas::load(const std::string& path) {
         else if (k == "empleo_mult")           pol.empleo_mult = v;
         else if (k == "impuesto_mult")         pol.impuesto_mult = v;
         else if (k == "gasto_mult")            pol.gasto_mult = v;
+        else if (k == "boost_agro")            pol.boost_agro = v;
+        else if (k == "boost_mineria")         pol.boost_mineria = v;
     }
     return pol;
 }
@@ -71,6 +97,7 @@ Engine::Engine(Population& p, Households& h, Firms& f, const Geography& g, Param
     std::int32_t mh = 0;
     for (std::int64_t i = 0; i < p_.size(); ++i) mh = std::max(mh, p_.hogar_id[i] + 1);
     next_hogar_id_ = mh;
+    leontief(VA_SHARE, xbase_);   // producción sectorial de referencia (insumo-producto)
     recomputar_ingreso_hogar();
 }
 
@@ -179,7 +206,8 @@ void Engine::mercado_laboral() {
     // 1) puestos de trabajo por departamento (empresas activas) modulados por el ciclo
     std::vector<double> slots(static_cast<std::size_t>(D), 0.0);
     for (std::int64_t k = 0; k < f_.size(); ++k)
-        if (f_.activa[k]) slots[f_.departamento[k]] += f_.empleos[k];
+        if (f_.activa[k])  // puestos ponderados por la producción del sector (insumo-producto)
+            slots[f_.departamento[k]] += f_.empleos[k] * sector_output_[static_cast<int>(f_.sector[k])];
     // ciclo económico + política de empleo/formalización (palanca = demanda de trabajo)
     // shock exógeno: golpea el empleo de forma moderada (la mayor parte va vía ingreso)
     const double shock_empleo = 1.0 - 0.35 * (1.0 - shock_actual_);
@@ -343,6 +371,16 @@ void Engine::migracion() {
         p_.hogar_id[i]        = next_hogar_id_++;                   // nuevo hogar en destino
         ++migraciones_anio_;
     }
+}
+
+void Engine::actualizar_produccion() {
+    double d[7];
+    for (int i = 0; i < 7; ++i) d[i] = VA_SHARE[i];
+    d[0] *= pol_.boost_agro;       // sector Agro
+    d[5] *= pol_.boost_mineria;    // sector Minería
+    double X[7]; leontief(d, X);
+    for (int i = 0; i < 7; ++i)
+        sector_output_[i] = (xbase_[i] > 0) ? X[i] / xbase_[i] : 1.0;  // índice vs base
 }
 
 // Sector financiero: crédito de hogares. Los hogares cortos de ingreso piden prestado
@@ -672,6 +710,7 @@ void Engine::run(std::ostream& csv) {
         shock_actual_ = (cfg_.anio_inicial + a == cfg_.shock_anio) ? (1.0 - cfg_.shock_mag) : 1.0;
         demografia();            // M7
         educacion();             // M1
+        actualizar_produccion(); // insumo-producto: propaga impulsos sectoriales (Leontief)
         dinamica_empresas();     // §3: extorsión/quiebra/entrada (fija la capacidad de empleo)
         mercado_laboral();       // M2/M3 (empleo endógeno a las empresas)
         recomputar_ingreso_hogar();
