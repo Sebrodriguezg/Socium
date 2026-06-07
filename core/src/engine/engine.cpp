@@ -49,6 +49,8 @@ Politicas Politicas::load(const std::string& path) {
         else if (k == "crimen_abandono_mult")  pol.crimen_abandono_mult = v;
         else if (k == "smlv_mult")             pol.smlv_mult = v;
         else if (k == "empleo_mult")           pol.empleo_mult = v;
+        else if (k == "impuesto_mult")         pol.impuesto_mult = v;
+        else if (k == "gasto_mult")            pol.gasto_mult = v;
     }
     return pol;
 }
@@ -430,6 +432,27 @@ void Engine::cerrar_macro() {
         double objetivo = 1.0 + par_.sensibilidad_ciclo * (crecimiento_ - par_.productividad_anual);
         ciclo_ = std::min(1.25, std::max(0.8, 0.5 * ciclo_ + 0.5 * objetivo)); // suavizado
     }
+
+    // --- cierre fiscal stock-flow consistent (anual) ---
+    const double PIB = std::max(1.0, static_cast<double>(pib) * 12.0);   // proxy anual
+    std::int64_t vivos = 0;
+    for (std::int64_t i = 0; i < N; ++i) vivos += p_.vivo[i];
+    if (deuda_ == 0.0) deuda_ = par_.deuda_inicial_pib * PIB;            // deuda inicial (año base)
+
+    const double recaudo = par_.tasa_tributaria_pib * pol_.impuesto_mult * PIB;
+    // costo fiscal SOLO de las transferencias de política (el piso no laboral es renta privada)
+    const double transferencias = pol_.transfer_ingreso_pc * static_cast<double>(vivos) * 12.0;
+    const double gasto = par_.gasto_social_base_pib * pol_.gasto_mult * PIB
+                         + transferencias + par_.interes_deuda * deuda_;
+    const double deficit = gasto - recaudo;
+    deuda_ += deficit;
+    recaudo_pib_ = recaudo / PIB;
+    deficit_pib_ = deficit / PIB;
+    deuda_pib_   = deuda_ / PIB;
+    // sostenibilidad: la deuda por encima del umbral castiga el ciclo (prima de riesgo / crowding out)
+    const double exceso = std::max(0.0, deuda_pib_ - par_.umbral_deuda_pib);
+    ciclo_ *= (1.0 - par_.penalidad_crecimiento_deuda * exceso);
+
     prev_pib_ = static_cast<double>(pib);
     productividad_ *= (1.0 + par_.productividad_anual);  // crecimiento real de ingresos
 }
@@ -477,6 +500,7 @@ MetricasAnuales Engine::medir(int anio) {
     m.pib_index = static_cast<double>(tot) / pib_base_;
     m.crecimiento = crecimiento_;
     m.tasa_migracion = vivos ? static_cast<Real>(migraciones_anio_) / vivos : 0;
+    m.recaudo_pib = recaudo_pib_; m.deficit_pib = deficit_pib_; m.deuda_pib = deuda_pib_;
     if (vivos) {
         m.satisfaccion_media = static_cast<Real>(suma_sat / vivos);
         const long double med = suma_op / vivos;
@@ -490,7 +514,8 @@ static void escribir_fila(std::ostream& os, const MetricasAnuales& m) {
        << m.informalidad << "," << m.gini_ingreso << "," << m.pobreza << "," << m.pobreza_extrema << ","
        << m.tasa_desercion << "," << m.prev_enfermedad << "," << m.tasa_delincuencia << ","
        << m.cobertura_educativa << "," << m.pib_index << "," << m.crecimiento << ","
-       << m.tasa_migracion << "," << m.satisfaccion_media << "," << m.polarizacion << "\n";
+       << m.tasa_migracion << "," << m.satisfaccion_media << "," << m.polarizacion << ","
+       << m.recaudo_pib << "," << m.deficit_pib << "," << m.deuda_pib << "\n";
 }
 
 // Exporta métricas agregadas por departamento (estado actual del modelo).
@@ -576,7 +601,8 @@ void Engine::escribir_perfiles(int anio, bool header) {
 void Engine::run(std::ostream& csv) {
     csv << "anio,poblacion,edad_media,desempleo,informalidad,gini_ingreso,pobreza,pobreza_extrema,"
            "tasa_desercion,prev_enfermedad,tasa_delincuencia,cobertura_educativa,"
-           "pib_index,crecimiento,tasa_migracion,satisfaccion_media,polarizacion\n";
+           "pib_index,crecimiento,tasa_migracion,satisfaccion_media,polarizacion,"
+           "recaudo_pib,deficit_pib,deuda_pib\n";
 
     // estado inicial (año base): fijar empleo/ingreso primero
     mercado_laboral();

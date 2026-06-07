@@ -76,6 +76,14 @@ struct Parametros {
     Real extorsion_tasa = 0.20;              // 'vacuna' como fracción del bruto en zona de conflicto
     Real prob_entrada_empresa = 0.12;        // reactivación/emprendimiento en buen ciclo
 
+    // --- cuentas fiscales (cierre stock-flow consistent) ---
+    Real tasa_tributaria_pib = 0.195;        // recaudo / PIB (Colombia ~19.5%)
+    Real gasto_social_base_pib = 0.20;       // gasto público base / PIB (baseline ~déficit 4% real CO)
+    Real interes_deuda = 0.06;               // tasa de interés real sobre la deuda
+    Real deuda_inicial_pib = 0.57;           // deuda pública inicial / PIB (Colombia ~57%)
+    Real umbral_deuda_pib = 0.70;            // umbral de sostenibilidad
+    Real penalidad_crecimiento_deuda = 0.25; // castigo al ciclo por exceso de deuda/PIB
+
     // --- líneas de referencia (DANE 2023) ---
     Real linea_pobreza_mensual = 435'375.0;  // línea de pobreza monetaria per cápita
     Real linea_pobreza_extrema = 199'828.0;  // línea de pobreza extrema per cápita

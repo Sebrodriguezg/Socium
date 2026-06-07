@@ -38,6 +38,8 @@ struct Politicas {
     double crimen_abandono_mult  = 1.0;  // >1 => más reinserción (M5)
     double smlv_mult             = 1.0;  // salario mínimo real (M2)
     double empleo_mult           = 1.0;  // participación/empleo (M3)
+    double impuesto_mult         = 1.0;  // tasa tributaria (fiscal)
+    double gasto_mult            = 1.0;  // gasto público base (fiscal)
 
     static Politicas load(const std::string& path);  // archivo key=value
 };
@@ -49,7 +51,8 @@ struct MetricasAnuales {
          pobreza = 0, pobreza_extrema = 0, tasa_desercion = 0, prev_enfermedad = 0,
          tasa_delincuencia = 0, cobertura_educativa = 0,
          pib_index = 0, crecimiento = 0, tasa_migracion = 0,
-         satisfaccion_media = 0, polarizacion = 0;
+         satisfaccion_media = 0, polarizacion = 0,
+         recaudo_pib = 0, deficit_pib = 0, deuda_pib = 0;
 };
 
 class Engine {
@@ -92,6 +95,8 @@ private:
     double productividad_ = 1.0; // factor acumulado de productividad (crece ingresos)
     double crecimiento_ = 0.0;   // último crecimiento del PIB
     double pib_base_ = 0.0;      // PIB del año base (para índice)
+    double deuda_ = 0.0;         // stock de deuda pública (unidades de PIB-proxy)
+    double recaudo_pib_ = 0.0, deficit_pib_ = 0.0, deuda_pib_ = 0.0;  // últimos ratios fiscales
     std::ostream* perfiles_ = nullptr;  // salida opcional de perfiles por año
     std::int32_t next_hogar_id_ = 0;  // siguiente id de hogar (para migrantes)
     std::int64_t migraciones_anio_ = 0;

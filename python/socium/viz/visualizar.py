@@ -20,6 +20,8 @@ METRICAS = {
     "desempleo": "Desempleo",
     "tasa_delincuencia": "Tasa de delincuencia",
     "satisfaccion_media": "Satisfacción con la vida (0-10)",
+    "deuda_pib": "Deuda pública (% del PIB)",
+    "deficit_pib": "Déficit fiscal (% del PIB)",
 }
 
 

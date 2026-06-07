@@ -30,7 +30,7 @@ def mapear(pol: dict) -> dict:
     """Mapeo de palancas de política -> knobs del motor (primer orden, documentado)."""
     k = {"transfer_ingreso_pc": 0.0, "desercion_mult": 1.0, "salud_prob_mult": 1.0,
          "aseguramiento_boost": 0.0, "crimen_base_mult": 1.0, "crimen_abandono_mult": 1.0,
-         "smlv_mult": 1.0, "empleo_mult": 1.0}
+         "smlv_mult": 1.0, "empleo_mult": 1.0, "impuesto_mult": 1.0, "gasto_mult": 1.0}
 
     # --- transferencias -> ingreso per cápita del hogar ---
     monto = lever(pol, "transferencias", "monto_per_capita", default=1.0) or 1.0
@@ -66,6 +66,13 @@ def mapear(pol: dict) -> dict:
     # --- laboral ---
     k["smlv_mult"] = lever(pol, "laboral", "salario_minimo_real", default=1.0) or 1.0
     k["empleo_mult"] = lever(pol, "laboral", "formalizacion", default=1.0) or 1.0
+
+    # --- fiscal (cierre stock-flow consistent) ---
+    k["impuesto_mult"] = lever(pol, "fiscal", "impuesto_renta_top", default=1.0) or 1.0
+    regla = lever(pol, "fiscal", "regla_fiscal", default="continuidad")
+    if regla == "ajuste_fuerte":            k["gasto_mult"] = 0.80   # reducción del Estado
+    elif isinstance(regla, str) and "austeridad" in regla: k["gasto_mult"] = 0.95
+    else:                                   k["gasto_mult"] = 1.0
 
     return k
 

@@ -7,3 +7,5 @@ crimen_base_mult 0.95
 crimen_abandono_mult 1.6
 smlv_mult 1.23
 empleo_mult 1.1
+impuesto_mult 1
+gasto_mult 0.95

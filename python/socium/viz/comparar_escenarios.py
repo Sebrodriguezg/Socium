@@ -15,7 +15,8 @@ RUNS = ROOT / "experiments" / "runs"
 RES = ROOT / "results"
 ESCENARIOS = ["baseline", "cepeda", "de_la_espriella"]
 METRICAS = ["pobreza", "gini_ingreso", "desempleo", "informalidad",
-            "tasa_delincuencia", "cobertura_educativa", "prev_enfermedad"]
+            "tasa_delincuencia", "cobertura_educativa", "prev_enfermedad",
+            "deficit_pib", "deuda_pib"]
 
 
 def cargar():
