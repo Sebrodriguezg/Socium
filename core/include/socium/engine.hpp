@@ -60,6 +60,8 @@ public:
     void run(std::ostream& csv);          // simula el horizonte y escribe la serie anual
     MetricasAnuales medir(int anio);
     void exportar_departamentos(std::ostream& os);  // métricas por departamento (estado actual)
+    // Activa la exportación de PERFILES (depto×sexo×edad×educación) por año -> consulta pública.
+    void set_salida_perfiles(std::ostream* os) { perfiles_ = os; }
 
 private:
     // mecanismos
@@ -74,6 +76,7 @@ private:
     void economia_mensual();    // economía (KWEM) mensual
     void cerrar_macro();        // §8 paso 12: agrega PIB/empleo y realimenta el ciclo
     void recomputar_ingreso_hogar();
+    void escribir_perfiles(int anio, bool header);  // agrega por perfil para consulta pública
 
     Population&      p_;
     Households&      h_;
@@ -89,6 +92,7 @@ private:
     double productividad_ = 1.0; // factor acumulado de productividad (crece ingresos)
     double crecimiento_ = 0.0;   // último crecimiento del PIB
     double pib_base_ = 0.0;      // PIB del año base (para índice)
+    std::ostream* perfiles_ = nullptr;  // salida opcional de perfiles por año
     std::int32_t next_hogar_id_ = 0;  // siguiente id de hogar (para migrantes)
     std::int64_t migraciones_anio_ = 0;
 };

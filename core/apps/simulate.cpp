@@ -72,6 +72,10 @@ int main(int argc, char** argv) {
     if (out) fout.open(out);
     std::ostream& os = out ? fout : std::cout;
 
+    std::ofstream fperf;
+    const char* op = arg(argc, argv, "--out-perfiles", nullptr);
+    if (op) { fperf.open(op); eng.set_salida_perfiles(&fperf); }
+
     std::cerr << "Simulando " << cfg.horizonte_anios << " años (dt = "
               << cfg.pasos_por_anio << "/año)...\n";
     const auto t0 = std::chrono::steady_clock::now();
