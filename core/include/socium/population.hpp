@@ -29,6 +29,7 @@ enum class PosicionOcupacional : std::uint8_t {
 };
 enum class AfiliacionSalud : std::uint8_t { Ninguno, Contributivo, Subsidiado, Especial };
 enum class GrupoSisben : std::uint8_t { NoClasificado, A, B, C, D };
+enum class TenenciaVivienda : std::uint8_t { Propia, Arriendo, Otra };
 enum class EstatusMigratorio : std::uint8_t { Nacional, MigranteRegular, MigranteIrregular };
 enum class Religiosidad : std::uint8_t { Ninguna, Catolica, Cristiana, Otra };
 
