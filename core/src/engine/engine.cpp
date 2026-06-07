@@ -237,7 +237,10 @@ void Engine::mercado_laboral() {
         }
         // ¿consigue uno de los puestos del municipio? (sesgo por educación, centrado ~1)
         const double educ_factor = 0.75 + 0.10 * static_cast<int>(p_.nivel_educativo[i]);
-        if (uniform01() > occ[p_.departamento_id[i]] * educ_factor) {
+        // probabilidad de conseguir empleo según la edad (desempleo juvenil >> adulto; mayores
+        // re-empleo más difícil). Centrado ~1 para no alterar el agregado.
+        const double fe = (edad < 25) ? 0.72 : (edad < 45) ? 1.12 : (edad < 55) ? 1.05 : 0.85;
+        if (uniform01() > occ[p_.departamento_id[i]] * educ_factor * fe) {
             p_.situacion_laboral[i] = SituacionLaboral::Desocupado; p_.ingreso_laboral[i] = 0; continue;
         }
 
@@ -260,7 +263,7 @@ void Engine::mercado_laboral() {
         double p_inf = (0.847 - 0.417 * urb) * (anios < 11 ? 1.15 : 0.75);
         p_inf = std::min(0.95, std::max(0.05, p_inf));
         p_.informal[i] = (uniform01() < p_inf) ? 1 : 0;
-        if (p_.informal[i]) ingreso *= (1.0 - par_.penalizacion_informalidad);
+        if (p_.informal[i]) ingreso *= (1.0 - par_.penalizacion_informalidad) * erosion_inf_; // IPC erosiona al informal
         if (p_.sexo[i] == Sexo::Mujer) ingreso *= (1.0 - par_.brecha_genero);
         if (p_.es_delincuente[i]) ingreso *= 0.7;     // menor inserción laboral formal
         p_.ingreso_laboral[i] = static_cast<float>(std::max(ingreso, par_.smlv * 0.15));
@@ -395,7 +398,9 @@ void Engine::finanzas() {
         if (!p_.vivo[i] || p_.edad[i] < 18) continue;
         const double pc = hh_pc_[i];
         const bool informal_credito = p_.informal[i] || pc < 1.5 * linea;
-        const double tasa = informal_credito ? par_.tasa_gota_gota : par_.tasa_credito_formal;
+        // el interés sube con la inflación (Banrep / prima de riesgo)
+        const double extra = par_.sens_interes_inflacion * std::max(0.0, inflacion_ - par_.meta_inflacion);
+        const double tasa = (informal_credito ? par_.tasa_gota_gota : par_.tasa_credito_formal) + extra;
         double d = p_.deuda[i] * (1.0 + tasa);                 // interés
         if (pc < linea) d += (linea - pc) * 6.0;               // pide prestado para subsistir
         else            d = std::max(0.0, d - (pc - linea) * 3.0);  // repaga con excedente
@@ -543,8 +548,12 @@ void Engine::cerrar_macro() {
     inflacion_ = par_.inflacion_base + par_.sens_inflacion_deficit * (deficit_pib_ - 0.03)
                + 0.4 * crecimiento_;
     inflacion_ = std::min(0.5, std::max(0.0, inflacion_));
-    if (prev_pib_ > 0.0)  // la TRM se deprecia con el diferencial de inflación (PPA/UIP)
+    if (prev_pib_ > 0.0) {  // la TRM se deprecia con el diferencial de inflación (PPA/UIP)
         trm_ *= (1.0 + inflacion_ - par_.inflacion_externa);
+        nivel_precios_ *= (1.0 + inflacion_);   // costo de vida nominal acumulado
+        // la inflación por encima de la meta erosiona el ingreso REAL de los informales
+        erosion_inf_ *= (1.0 - par_.erosion_informal_inflacion * std::max(0.0, inflacion_ - par_.meta_inflacion));
+    }
 
     prev_pib_ = static_cast<double>(pib);
     productividad_ *= (1.0 + par_.productividad_anual);  // crecimiento real de ingresos

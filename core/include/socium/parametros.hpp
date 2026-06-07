@@ -77,7 +77,7 @@ struct Parametros {
     Real peso_seguridad_bienestar = 3.0;     // cuánto pesa el conflicto local en la satisfacción
 
     // --- agente EMPRESA (spec §3) ---
-    Real empleos_objetivo_frac = 0.50;       // puestos ≈ frac · pob. en edad de trabajar — calibra desempleo a ~10% (GEIH)
+    Real empleos_objetivo_frac = 0.51;       // puestos ≈ frac · pob. en edad de trabajar — calibra desempleo a ~10% (GEIH)
     Real margen_trabajador_anual = 8'000'000.0; // valor agregado bruto por trabajador (COP/año)
     Real margen_operativo = 0.15;            // utilidad operativa sobre valor agregado
     Real extorsion_tasa = 0.20;              // 'vacuna' como fracción del bruto en zona de conflicto
@@ -87,6 +87,11 @@ struct Parametros {
     Real tasa_credito_formal = 0.20;         // interés anual del crédito formal (bancos)
     Real tasa_gota_gota = 2.0;               // interés anual del crédito informal ('gota a gota', ~200%)
     Real umbral_estres_financiero = 1.0;     // deuda > umbral·ingreso anual = estrés financiero
+    Real sens_interes_inflacion = 1.0;       // el interés sube con el exceso de inflación (Banrep)
+
+    // --- costo de vida (IPC erosiona el ingreso real, sobre todo informal) ---
+    Real meta_inflacion = 0.04;              // umbral sobre el que la inflación erosiona
+    Real erosion_informal_inflacion = 0.5;   // cuánto erosiona el ingreso informal por exceso de IPC
 
     // --- cuentas fiscales (cierre stock-flow consistent) ---
     Real tasa_tributaria_pib = 0.195;        // recaudo / PIB (Colombia ~19.5%)

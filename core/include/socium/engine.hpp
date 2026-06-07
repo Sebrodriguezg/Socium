@@ -113,6 +113,8 @@ private:
     double deuda_ = 0.0;         // stock de deuda pública (unidades de PIB-proxy)
     double recaudo_pib_ = 0.0, deficit_pib_ = 0.0, deuda_pib_ = 0.0;  // últimos ratios fiscales
     double trm_ = 0.0, inflacion_ = 0.0;  // tasa de cambio e inflación
+    double nivel_precios_ = 1.0;          // índice de precios acumulado (costo de vida nominal)
+    double erosion_inf_ = 1.0;            // factor de erosión real del ingreso informal por IPC
     std::ostream* perfiles_ = nullptr;  // salida opcional de perfiles por año
     const Network* red_ = nullptr;      // red social explícita (opcional)
     double sector_output_[7] = {1,1,1,1,1,1,1};  // índice de producción por sector (insumo-producto)
