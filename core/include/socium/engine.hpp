@@ -46,7 +46,8 @@ struct MetricasAnuales {
     std::int64_t poblacion = 0;
     Real edad_media = 0, desempleo = 0, informalidad = 0, gini_ingreso = 0,
          pobreza = 0, tasa_desercion = 0, prev_enfermedad = 0,
-         tasa_delincuencia = 0, cobertura_educativa = 0;
+         tasa_delincuencia = 0, cobertura_educativa = 0,
+         pib_index = 0, crecimiento = 0;
 };
 
 class Engine {
@@ -65,6 +66,7 @@ private:
     void salud_mensual();       // M4 mensual
     void delincuencia();        // M5 anual
     void economia_mensual();    // economía (KWEM) mensual
+    void cerrar_macro();        // §8 paso 12: agrega PIB/empleo y realimenta el ciclo
     void recomputar_ingreso_hogar();
 
     Population&      p_;
@@ -74,6 +76,12 @@ private:
     EngineConfig     cfg_;
     Politicas        pol_;
     std::vector<float> hh_pc_;   // ingreso per cápita del hogar de cada persona
+    // estado macro (cierre micro-macro)
+    double prev_pib_ = 0.0;      // PIB agregado del año anterior
+    double ciclo_ = 1.0;         // multiplicador de ciclo económico (realimenta empleo)
+    double productividad_ = 1.0; // factor acumulado de productividad (crece ingresos)
+    double crecimiento_ = 0.0;   // último crecimiento del PIB
+    double pib_base_ = 0.0;      // PIB del año base (para índice)
 };
 
 } // namespace socium

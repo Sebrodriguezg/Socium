@@ -77,7 +77,15 @@ void Engine::recomputar_ingreso_hogar() {
     std::vector<int>    cnt(maxh, 0);
     for (std::int64_t i = 0; i < N; ++i) {
         if (!p_.vivo[i]) continue;
-        suma[p_.hogar_id[i]] += p_.ingreso_laboral[i];
+        // ingreso laboral + ingresos no laborales (pensiones, subsidios, rebusque)
+        double ing = p_.ingreso_laboral[i];
+        if (p_.edad[i] >= 65) {
+            ing += (static_cast<int>(p_.nivel_educativo[i]) >= static_cast<int>(NivelEducativo::Media))
+                   ? par_.pension_contributiva : par_.colombia_mayor;
+        } else if (p_.edad[i] >= 18 && p_.situacion_laboral[i] != SituacionLaboral::Ocupado) {
+            ing += par_.subsistencia_informal;   // 'rebusque' informal de no ocupados
+        }
+        suma[p_.hogar_id[i]] += ing;
         cnt[p_.hogar_id[i]]++;
     }
     hh_pc_.assign(N, 0.0f);
@@ -162,8 +170,9 @@ void Engine::mercado_laboral() {
         if (edad > 65) p_part *= 0.4;
         if (uniform01() > p_part) { p_.situacion_laboral[i] = SituacionLaboral::Inactivo; p_.ingreso_laboral[i] = 0; continue; }
 
-        // entre activos: desempleo objetivo (menor a mayor educación)
-        double pdesemp = par_.desempleo_objetivo * (anios >= 11 ? 0.8 : 1.4);
+        // entre activos: desempleo objetivo (menor a mayor educación), modulado por el
+        // ciclo económico endógeno (cierre micro-macro): mejor ciclo -> menos desempleo
+        double pdesemp = par_.desempleo_objetivo * (anios >= 11 ? 0.8 : 1.4) / ciclo_;
         if (uniform01() < pdesemp) { p_.situacion_laboral[i] = SituacionLaboral::Desocupado; p_.ingreso_laboral[i] = 0; continue; }
 
         // ocupado: ingreso Mincer + residual lognormal (dispersión salarial real;
@@ -173,7 +182,7 @@ void Engine::mercado_laboral() {
         std::normal_distribution<double> ruido(0.0, 0.80);   // residual de Mincer
         double ln = par_.retorno_anual_escolaridad * (anios - 11) + 0.03 * exper
                   - 0.0004 * exper * exper + ruido(thread_rng());
-        double ingreso = par_.smlv * pol_.smlv_mult * std::exp(ln);
+        double ingreso = par_.smlv * pol_.smlv_mult * productividad_ * std::exp(ln);
         // informalidad (M3): por urbano/rural real del municipio (spec §2.4:
         // urbano 43%, rural 84.7%) modulada por educación
         const std::uint16_t mi = p_.municipio_id[i];
@@ -251,6 +260,26 @@ void Engine::economia_mensual() {
     simular_economia(p_, ep, 2, cfg_.economia_local, cfg_.seed);
 }
 
+// §8 paso 12 — cierre micro-macro: agrega PIB y empleo, calcula crecimiento y
+// realimenta el ciclo económico y la productividad para el año siguiente.
+void Engine::cerrar_macro() {
+    const std::int64_t N = p_.size();
+    long double pib = 0.0L;
+    #pragma omp parallel for reduction(+:pib) schedule(static)
+    for (std::int64_t i = 0; i < N; ++i)
+        if (p_.vivo[i] && p_.situacion_laboral[i] == SituacionLaboral::Ocupado)
+            pib += p_.ingreso_laboral[i];
+
+    if (prev_pib_ > 0.0) {
+        crecimiento_ = static_cast<double>(pib) / prev_pib_ - 1.0;
+        // ciclo: el crecimiento por encima/por debajo de la tendencia realimenta el empleo
+        double objetivo = 1.0 + par_.sensibilidad_ciclo * (crecimiento_ - par_.productividad_anual);
+        ciclo_ = std::min(1.25, std::max(0.8, 0.5 * ciclo_ + 0.5 * objetivo)); // suavizado
+    }
+    prev_pib_ = static_cast<double>(pib);
+    productividad_ *= (1.0 + par_.productividad_anual);  // crecimiento real de ingresos
+}
+
 // --- métricas agregadas (solo agentes vivos) ---
 MetricasAnuales Engine::medir(int anio) {
     const std::int64_t N = p_.size();
@@ -284,6 +313,9 @@ MetricasAnuales Engine::medir(int anio) {
     long double w = 0, tot = 0;
     for (std::int64_t i = 0; i < n; ++i) { w += static_cast<long double>(i + 1) * ingresos[i]; tot += ingresos[i]; }
     m.gini_ingreso = tot > 0 ? static_cast<Real>((2.0L * w) / (n * tot) - static_cast<long double>(n + 1) / n) : 0;
+    if (pib_base_ <= 0.0) pib_base_ = static_cast<double>(tot) > 0 ? static_cast<double>(tot) : 1.0;
+    m.pib_index = static_cast<double>(tot) / pib_base_;
+    m.crecimiento = crecimiento_;
     return m;
 }
 
@@ -291,16 +323,18 @@ static void escribir_fila(std::ostream& os, const MetricasAnuales& m) {
     os << m.anio << "," << m.poblacion << "," << m.edad_media << "," << m.desempleo << ","
        << m.informalidad << "," << m.gini_ingreso << "," << m.pobreza << ","
        << m.tasa_desercion << "," << m.prev_enfermedad << "," << m.tasa_delincuencia << ","
-       << m.cobertura_educativa << "\n";
+       << m.cobertura_educativa << "," << m.pib_index << "," << m.crecimiento << "\n";
 }
 
 void Engine::run(std::ostream& csv) {
     csv << "anio,poblacion,edad_media,desempleo,informalidad,gini_ingreso,pobreza,"
-           "tasa_desercion,prev_enfermedad,tasa_delincuencia,cobertura_educativa\n";
+           "tasa_desercion,prev_enfermedad,tasa_delincuencia,cobertura_educativa,"
+           "pib_index,crecimiento\n";
 
     // estado inicial (año base): fijar empleo/ingreso primero
     mercado_laboral();
     recomputar_ingreso_hogar();
+    prev_pib_ = 0.0; cerrar_macro();   // fija PIB base
     escribir_fila(csv, medir(cfg_.anio_inicial));
 
     for (int a = 1; a <= cfg_.horizonte_anios; ++a) {
@@ -313,6 +347,7 @@ void Engine::run(std::ostream& csv) {
             salud_mensual();     // M4
             economia_mensual();  // KWEM
         }
+        cerrar_macro();          // §8 paso 12: agrega y realimenta el ciclo
         escribir_fila(csv, medir(cfg_.anio_inicial + a));
     }
 }

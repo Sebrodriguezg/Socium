@@ -45,8 +45,18 @@ struct Parametros {
     Real fecundidad_total = 1.75;      // DANE
     Real esperanza_vida = 77.0;        // DANE
 
+    // --- ingresos no laborales del hogar (para pobreza realista, M3/§2.4) ---
+    Real pension_contributiva = 1'100'000.0; // jubilados con historia formal (COP/mes)
+    Real colombia_mayor = 80'000.0;          // subsidio a adultos mayores vulnerables
+    Real subsistencia_informal = 380'000.0;  // rebusque + otros ing. no laborales (remesas/rentas/ayudas)
+    // NOTA: calibración fina de pobreza a 33% (DANE) requiere microdatos de ingreso GEIH
+
+    // --- cierre micro-macro (§8 paso 12, §11 Brecha 2) ---
+    Real productividad_anual = 0.015;        // crecimiento real de productividad (PIB/ocupado)
+    Real sensibilidad_ciclo = 0.5;           // cuánto realimenta el crecimiento al empleo
+
     // --- líneas de referencia ---
-    Real linea_pobreza_mensual = 450'000.0;  // línea de pobreza monetaria per cápita (aprox 2024)
+    Real linea_pobreza_mensual = 435'000.0;  // línea de pobreza monetaria per cápita (DANE 2023)
 };
 
 } // namespace socium
