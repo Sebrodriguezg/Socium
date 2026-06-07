@@ -1,0 +1,79 @@
+# Parámetros de los mecanismos causales — Socium · Colombia
+# Cada parámetro lleva `fuente`. `supuesto: true` => valor de modelado a calibrar
+# contra el agregado real indicado (no es un dato medido directamente).
+# Ver docs/model-spec/mecanismos.md
+meta:
+  fecha_base: "2026-06-06"
+  nota: "Valores iniciales; se refinan con microdatos. Lo marcado supuesto se calibra a macro."
+
+# ---------- M1: deserción educativa ----------
+educacion_desercion:
+  # deserción en educación superior por estrato (LEE, Javeriana, 2021-2)
+  rr_por_estrato:
+    estrato_1: 0.133
+    estrato_6: 0.071
+    fuente: "LEE Universidad Javeriana, Deserción en educación superior 2023 (2021-2)"
+    nota: "estratos 2-5 interpolados; para 5-16 se ancla a la deserción municipal del MEN"
+  desercion_escolar_nacional_5_16:
+    valor: 0.037
+    fuente: "MEN (335.364 de 9.800.134 matriculados)"
+  fuente_municipal: "data/reference/municipios.csv (columna desercion, MEN)"
+
+# ---------- M2: retornos a la educación (Mincer) ----------
+educacion_retornos:
+  retorno_anual_escolaridad:
+    valor: 0.10
+    fuente: "Estudios con GEIH/DANE: 9.5% (1985) -> 11.3% (2000); ~10-14% recientes"
+    nota: "coeficiente Mincer por año de escolaridad"
+  brecha_genero:
+    supuesto: true
+    valor: 0.12
+    fuente: "GEIH (brecha salarial de género ~pp); calibrar"
+  penalizacion_informalidad:
+    supuesto: true
+    valor: 0.30
+    fuente: "GEIH; calibrar a diferencia formal/informal"
+
+# ---------- M3: mercado laboral ----------
+laboral:
+  tasa_desempleo_nacional: {valor: 0.10, fuente: "GEIH 2024-2025 (aprox.)"}
+  tasa_informalidad_nacional: {valor: 0.57, fuente: "GEIH (~56-58%)"}
+  nota: "transiciones por educación/edad/posición; calibrar por municipio con GEIH"
+
+# ---------- M4: salud ----------
+salud:
+  cobertura_aseguramiento_nacional: {valor: 0.97, fuente: "MinSalud/ADRES (~95-99%)"}
+  rr_enfermar_sin_aseguramiento:
+    supuesto: true
+    valor: 1.5
+    fuente: "literatura de acceso a salud; calibrar a barreras de acceso (ECV)"
+  perdida_productividad_enfermo:
+    supuesto: true
+    valor: 0.4
+    fuente: "carga de enfermedad/ausentismo; calibrar"
+  ancla_macro: "mortalidad infantil/materna por departamento (SISPRO/DANE)"
+
+# ---------- M5: delincuencia (factores de riesgo, calibrado a macro) ----------
+delincuencia:
+  # riesgos relativos (multiplican una tasa base que se normaliza por municipio)
+  rr_nini:        {supuesto: true, valor: 2.5, fuente: "perfil nini-crimen (LEE Javeriana 2022); calibrar"}
+  rr_pobreza:     {supuesto: true, valor: 2.0, fuente: "desempleo/pobreza-delincuencia (literatura); calibrar"}
+  rr_baja_educacion: {supuesto: true, valor: 1.8, fuente: "calibrar"}
+  rr_hombre_joven:   {supuesto: true, valor: 3.0, fuente: "estructura etaria-sexo del delito (Med. Legal); calibrar"}
+  rr_crimen_local:   {supuesto: true, valor: 2.0, fuente: "presencia de crimen organizado/cultivos ilícitos (UNODC); calibrar"}
+  ancla_macro: "homicidios/100k y hurtos por municipio (Medicina Legal / Policía Nacional)"
+  nota: "la tasa base se ajusta por municipio para que el agregado simulado = tasa real"
+
+# ---------- M6: movilidad intergeneracional ----------
+movilidad:
+  persistencia_ingreso_padres_hijos:
+    supuesto: true
+    valor: 0.6
+    fuente: "alta persistencia en Colombia (ELCA, estudios de movilidad); calibrar"
+
+# ---------- M7: demografía ----------
+demografia:
+  fecundidad_total: {valor: 1.75, fuente: "DANE (~1.7-1.8)"}
+  esperanza_vida:   {valor: 77.0, fuente: "DANE (~77 años)"}
+  fuente_poblacion: "data/reference/poblacion_municipal.csv (DANE proyecciones 2026)"
+  ancla_macro: "pirámide etaria y crecimiento por municipio (DANE 2018-2035)"
