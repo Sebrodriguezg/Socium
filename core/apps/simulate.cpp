@@ -101,5 +101,9 @@ int main(int argc, char** argv) {
         std::ofstream fd(od); eng.exportar_departamentos(fd);
         std::cerr << "departamentos -> " << od << "\n";
     }
+    if (const char* ox = arg(argc, argv, "--out-distribucion", nullptr)) {
+        std::ofstream fx(ox); eng.exportar_distribucion(fx);
+        std::cerr << "distribución -> " << ox << "\n";
+    }
     return 0;
 }

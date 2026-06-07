@@ -712,6 +712,38 @@ void Engine::escribir_perfiles(int anio, bool header) {
             }
 }
 
+// Exporta hechos estilizados: concentración del ingreso (deciles, top shares) y la
+// distribución de tamaño de empresas (para chequear power-law/Zipf).
+void Engine::exportar_distribucion(std::ostream& os) {
+    std::vector<float> w;
+    w.reserve(p_.size());
+    for (std::int64_t i = 0; i < p_.size(); ++i) if (p_.vivo[i]) w.push_back(hh_pc_[i]);
+    std::sort(w.begin(), w.end());
+    const std::int64_t n = static_cast<std::int64_t>(w.size());
+    long double tot = 0; for (float x : w) tot += x;
+    os << "tipo,clave,valor\n";
+    if (n && tot > 0) {
+        for (int d = 1; d <= 10; ++d) {                       // participación por decil de ingreso
+            long double s = 0; std::int64_t a = (d-1)*n/10, b = d*n/10;
+            for (std::int64_t i = a; i < b; ++i) s += w[i];
+            os << "decil_ingreso," << d << "," << static_cast<double>(s/tot) << "\n";
+        }
+        auto topsh = [&](double f){ long double s=0; std::int64_t c=std::max<std::int64_t>(1,(std::int64_t)(f*n));
+            for (std::int64_t i=n-c;i<n;++i) s+=w[i]; return static_cast<double>(s/tot); };
+        os << "top_share,top1," << topsh(0.01) << "\n";
+        os << "top_share,top5," << topsh(0.05) << "\n";
+        os << "top_share,top10," << topsh(0.10) << "\n";
+    }
+    // distribución de tamaño de empresas
+    std::int64_t por_tam[4] = {0,0,0,0}, act = 0, maxe = 0;
+    for (std::int64_t k = 0; k < f_.size(); ++k) if (f_.activa[k]) {
+        ++act; por_tam[static_cast<int>(f_.tamano[k])]++; maxe = std::max<std::int64_t>(maxe, f_.empleos[k]); }
+    const char* tn[4] = {"micro","pequena","mediana","grande"};
+    for (int t = 0; t < 4; ++t)
+        os << "empresa_tamano," << tn[t] << "," << (act? static_cast<double>(por_tam[t])/act : 0.0) << "\n";
+    os << "empresa,max_empleos," << maxe << "\n";
+}
+
 void Engine::run(std::ostream& csv) {
     csv << "anio,poblacion,edad_media,desempleo,informalidad,gini_ingreso,pobreza,pobreza_extrema,"
            "tasa_desercion,prev_enfermedad,tasa_delincuencia,cobertura_educativa,"
