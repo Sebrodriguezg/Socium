@@ -166,28 +166,30 @@ static inline double prob_participacion(const Population& p, std::int64_t i) {
     return std::min(1.0, pp);
 }
 
-// M2/M3 — empleo ENDÓGENO a la capacidad de las empresas por municipio + ingreso (Mincer)
+// M2/M3 — empleo ENDÓGENO a la capacidad de las empresas. El emparejamiento se hace a
+// nivel DEPARTAMENTAL (mercados laborales regionales): 33 grupos siempre bien muestreados,
+// evita el artefacto de saturación de municipios chicos (desempleo invariante de escala).
 void Engine::mercado_laboral() {
     const std::int64_t N = p_.size();
-    const std::int64_t M = g_.n_municipios();
+    const std::int64_t D = g_.n_departamentos();
 
-    // 1) puestos de trabajo por municipio (empresas activas) modulados por el ciclo
-    std::vector<double> slots(static_cast<std::size_t>(M), 0.0);
+    // 1) puestos de trabajo por departamento (empresas activas) modulados por el ciclo
+    std::vector<double> slots(static_cast<std::size_t>(D), 0.0);
     for (std::int64_t k = 0; k < f_.size(); ++k)
-        if (f_.activa[k]) slots[f_.municipio[k]] += f_.empleos[k];
+        if (f_.activa[k]) slots[f_.departamento[k]] += f_.empleos[k];
     // ciclo económico + política de empleo/formalización (palanca = demanda de trabajo)
-    for (std::int64_t m = 0; m < M; ++m) slots[m] *= ciclo_ * pol_.empleo_mult;
+    for (std::int64_t d = 0; d < D; ++d) slots[d] *= ciclo_ * pol_.empleo_mult;
 
-    // 2) participantes esperados por municipio (suma de probabilidades de participación)
-    std::vector<double> exppart(static_cast<std::size_t>(M), 0.0);
+    // 2) participantes esperados por departamento (suma de probabilidades de participación)
+    std::vector<double> exppart(static_cast<std::size_t>(D), 0.0);
     for (std::int64_t i = 0; i < N; ++i) {
         if (!p_.vivo[i] || p_.edad[i] < 15 || p_.asiste_escuela[i]) continue;
-        exppart[p_.municipio_id[i]] += prob_participacion(p_, i);
+        exppart[p_.departamento_id[i]] += prob_participacion(p_, i);
     }
-    // 3) tasa de ocupación por municipio = min(1, puestos / participantes)
-    std::vector<double> occ(static_cast<std::size_t>(M), 0.0);
-    for (std::int64_t m = 0; m < M; ++m)
-        occ[m] = std::min(1.0, slots[m] / std::max(1.0, exppart[m]));
+    // 3) tasa de ocupación por departamento = min(1, puestos / participantes)
+    std::vector<double> occ(static_cast<std::size_t>(D), 0.0);
+    for (std::int64_t d = 0; d < D; ++d)
+        occ[d] = std::min(1.0, slots[d] / std::max(1.0, exppart[d]));
 
     #pragma omp parallel for schedule(static)
     for (std::int64_t i = 0; i < N; ++i) {
@@ -202,7 +204,7 @@ void Engine::mercado_laboral() {
         }
         // ¿consigue uno de los puestos del municipio? (sesgo por educación, centrado ~1)
         const double educ_factor = 0.75 + 0.10 * static_cast<int>(p_.nivel_educativo[i]);
-        if (uniform01() > occ[p_.municipio_id[i]] * educ_factor) {
+        if (uniform01() > occ[p_.departamento_id[i]] * educ_factor) {
             p_.situacion_laboral[i] = SituacionLaboral::Desocupado; p_.ingreso_laboral[i] = 0; continue;
         }
 

@@ -13,15 +13,22 @@ calibracion_ingreso:
     pobreza_monetaria: 0.330        # línea 435.375 COP/mes per cápita
     pobreza_extrema: 0.114          # línea 199.828 COP/mes
     gini_per_capita: 0.553
-    fuente: "DANE, Pobreza monetaria 2023 (bol-PM-2023)"
+    desempleo: 0.10                 # GEIH ~10%
+    informalidad: 0.56             # GEIH ~56%
+    fuente: "DANE, Pobreza monetaria 2023 (bol-PM-2023) + GEIH"
   parametros_calibrados:
     calib_ingreso: 1.8              # escala de recursos del hogar (perceptores sub-contados + otros)
     sigma_ingreso: 0.95             # dispersión lognormal del residual de Mincer
     ingreso_no_laboral_pc: 140000   # piso per cápita (transferencias/remesas/rentas/en especie)
-  resultado_modelo:
-    pobreza: 0.324
-    pobreza_extrema: 0.106
-    gini: 0.547
+    empleos_objetivo_frac: 0.52     # puestos de empresas ≈ frac·población en edad de trabajar
+  resultado_modelo_baseline_2026:
+    desempleo: 0.093
+    pobreza: 0.309
+    pobreza_extrema: 0.086
+    gini: 0.541
+    informalidad: 0.568
+  nota_matching: "el empleo se empareja a nivel DEPARTAMENTAL (no municipal) para que el
+                  desempleo sea invariante de escala (evita saturación de municipios chicos)."
   nota: "calib_ingreso>1 porque la formación de hogares sub-cuenta perceptores; el ingreso
          laboral individual queda escalado en consecuencia (la distribución per cápita es la calibrada)."
 
