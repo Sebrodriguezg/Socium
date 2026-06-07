@@ -98,6 +98,25 @@ std::int64_t Geography::cargar_pesos(const std::string& path) {
     return con_peso;
 }
 
+std::int64_t Geography::cargar_conflicto(const std::string& path) {
+    mpio_conflicto.assign(mpio_codigo.size(), 0.0f);
+    std::ifstream in(path);
+    if (!in) return 0;  // opcional: si no existe, conflicto = 0
+    std::string line;
+    std::getline(in, line); // encabezado: cod_mpio,homicidios_anual,tasa_homicidios_100k,indice_conflicto
+    std::int64_t con = 0;
+    while (std::getline(in, line)) {
+        if (line.empty()) continue;
+        auto f = split_csv(line);
+        if (f.size() < 4) continue;
+        auto it = idx_mpio.find(f[0]);
+        if (it == idx_mpio.end()) continue;
+        mpio_conflicto[it->second] = to_float(f[3]);
+        ++con;
+    }
+    return con;
+}
+
 std::vector<std::int64_t> Geography::conteo_municipios_por_depto() const {
     std::vector<std::int64_t> c(dpto_codigo.size(), 0);
     for (std::uint8_t d : mpio_dpto) ++c[d];

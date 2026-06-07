@@ -228,6 +228,10 @@ void Engine::delincuencia() {
         if (pobre) pr *= par_.rr_pobreza;
         if (bajaeduc) pr *= par_.rr_baja_educacion;
         if (hombrejoven) pr *= par_.rr_hombre_joven;
+        // presencia de grupos armados / conflicto local (spec §6.4 β₅): índice [0,1]
+        const std::uint16_t mi = p_.municipio_id[i];
+        if (mi < g_.mpio_conflicto.size())
+            pr *= 1.0 + (par_.rr_presencia_gao - 1.0) * g_.mpio_conflicto[mi];
 
         if (!p_.es_delincuente[i]) {
             if (uniform01() < pr) p_.es_delincuente[i] = 1;

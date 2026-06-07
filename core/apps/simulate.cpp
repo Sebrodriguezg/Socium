@@ -42,6 +42,7 @@ int main(int argc, char** argv) {
     std::cerr << "Construyendo Colombia base (" << n << " agentes)...\n";
     Geography g = Geography::load_csv(arg(argc, argv, "--geo", "data/reference/divipola.csv"));
     g.cargar_pesos(arg(argc, argv, "--pob", "data/reference/poblacion_municipal.csv"));
+    g.cargar_conflicto(arg(argc, argv, "--conflicto", "data/reference/conflicto_municipal.csv"));
     Population p = build_synthetic(n, cfg.seed);
     asignar_municipios(p, g, cfg.seed);
     Households h = form_households(p, g, cfg.seed);

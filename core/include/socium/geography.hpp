@@ -21,8 +21,9 @@ struct Geography {
     std::vector<std::uint8_t>  mpio_dpto;   // índice del departamento
     std::vector<float>         mpio_lon;
     std::vector<float>         mpio_lat;
-    std::vector<double>        mpio_peso;     // tamaño poblacional (población total)
-    std::vector<float>         mpio_urbano;   // fracción urbana [0,1] (pct cabecera/100)
+    std::vector<double>        mpio_peso;       // tamaño poblacional (población total)
+    std::vector<float>         mpio_urbano;     // fracción urbana [0,1] (pct cabecera/100)
+    std::vector<float>         mpio_conflicto;  // índice de conflicto [0,1] (homicidios)
 
     // búsqueda por código DANE
     std::unordered_map<std::string, std::uint8_t>  idx_dpto;
@@ -36,9 +37,12 @@ struct Geography {
 
     static Geography load_csv(const std::string& path);
 
-    // Carga pesos poblacionales por municipio desde data/reference/municipios.csv
-    // (columna poblacion_5_16). Devuelve cuántos municipios quedaron con peso > 0.
+    // Carga pesos poblacionales (poblacion_total) + pct_urbano por municipio.
+    // Devuelve cuántos municipios quedaron con peso > 0.
     std::int64_t cargar_pesos(const std::string& path);
+
+    // Carga el índice de conflicto por municipio (conflicto_municipal.csv, col indice_conflicto).
+    std::int64_t cargar_conflicto(const std::string& path);
 };
 
 } // namespace socium
