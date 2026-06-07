@@ -76,6 +76,26 @@ Geography Geography::load_csv(const std::string& path) {
     return g;
 }
 
+std::int64_t Geography::cargar_pesos(const std::string& path) {
+    std::ifstream in(path);
+    if (!in) throw std::runtime_error("no se pudo abrir municipios.csv: " + path);
+    mpio_peso.assign(mpio_codigo.size(), 0.0);
+
+    std::string line;
+    std::getline(in, line); // encabezado: cod_mpio,poblacion_5_16,...
+    std::int64_t con_peso = 0;
+    while (std::getline(in, line)) {
+        if (line.empty()) continue;
+        auto f = split_csv(line);
+        if (f.size() < 2) continue;
+        auto it = idx_mpio.find(f[0]);
+        if (it == idx_mpio.end()) continue;
+        const double w = to_float(f[1]);
+        if (w > 0.0) { mpio_peso[it->second] = w; ++con_peso; }
+    }
+    return con_peso;
+}
+
 std::vector<std::int64_t> Geography::conteo_municipios_por_depto() const {
     std::vector<std::int64_t> c(dpto_codigo.size(), 0);
     for (std::uint8_t d : mpio_dpto) ++c[d];

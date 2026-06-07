@@ -79,6 +79,12 @@ struct Population {
 // desarrollar/medir mientras se integran los datos reales.
 Population build_synthetic(std::int64_t n, std::uint64_t seed = 42);
 
+struct Geography; // fwd
+
+// Asigna a cada agente un municipio (y su departamento) muestreando según el peso
+// poblacional de Geography::mpio_peso. Distribución espacial realista de los agentes.
+void asignar_municipios(Population& p, const Geography& g, std::uint64_t seed = 7);
+
 // --- métricas agregadas (rol `A`) ---
 namespace metrics {
 Real mean_age(const Population& p);

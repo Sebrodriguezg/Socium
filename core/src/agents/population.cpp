@@ -1,4 +1,5 @@
 #include "socium/population.hpp"
+#include "socium/geography.hpp"
 #include "socium/rng.hpp"
 
 #include <algorithm>
@@ -132,6 +133,30 @@ Population build_synthetic(std::int64_t n, std::uint64_t seed) {
         p.hogar_id[i] = static_cast<std::int32_t>(i / 3);          // ~3 personas/hogar
     }
     return p;
+}
+
+void asignar_municipios(Population& p, const Geography& g, std::uint64_t seed) {
+    const std::int64_t M = g.n_municipios();
+    if (M == 0 || static_cast<std::int64_t>(g.mpio_peso.size()) != M) return;
+
+    // distribución acumulada de pesos para muestreo por búsqueda binaria
+    std::vector<double> cum(static_cast<std::size_t>(M));
+    double acc = 0.0;
+    for (std::int64_t m = 0; m < M; ++m) { acc += g.mpio_peso[m]; cum[m] = acc; }
+    if (acc <= 0.0) return;
+
+    #pragma omp parallel
+    { seed_thread_rng(seed ^ 0xA5A5A5ULL); }
+
+    const std::int64_t n = p.size();
+    #pragma omp parallel for schedule(static)
+    for (std::int64_t i = 0; i < n; ++i) {
+        const double u = uniform01() * acc;
+        std::int64_t m = std::lower_bound(cum.begin(), cum.end(), u) - cum.begin();
+        if (m >= M) m = M - 1;
+        p.municipio_id[i]    = static_cast<std::uint16_t>(m);
+        p.departamento_id[i] = g.mpio_dpto[static_cast<std::size_t>(m)];
+    }
 }
 
 namespace metrics {

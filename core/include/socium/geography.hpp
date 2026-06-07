@@ -21,6 +21,7 @@ struct Geography {
     std::vector<std::uint8_t>  mpio_dpto;   // índice del departamento
     std::vector<float>         mpio_lon;
     std::vector<float>         mpio_lat;
+    std::vector<double>        mpio_peso;  // proxy de tamaño poblacional (pob. 5-16)
 
     // búsqueda por código DANE
     std::unordered_map<std::string, std::uint8_t>  idx_dpto;
@@ -33,6 +34,10 @@ struct Geography {
     std::vector<std::int64_t> conteo_municipios_por_depto() const;
 
     static Geography load_csv(const std::string& path);
+
+    // Carga pesos poblacionales por municipio desde data/reference/municipios.csv
+    // (columna poblacion_5_16). Devuelve cuántos municipios quedaron con peso > 0.
+    std::int64_t cargar_pesos(const std::string& path);
 };
 
 } // namespace socium
