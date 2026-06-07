@@ -9,6 +9,7 @@
 
 #include "socium/population.hpp"
 #include "socium/household.hpp"
+#include "socium/firm.hpp"
 #include "socium/geography.hpp"
 #include "socium/parametros.hpp"
 #include "socium/economy.hpp"
@@ -53,8 +54,8 @@ struct MetricasAnuales {
 
 class Engine {
 public:
-    Engine(Population& p, Households& h, const Geography& g, Parametros par, EngineConfig cfg,
-           Politicas pol = {});
+    Engine(Population& p, Households& h, Firms& f, const Geography& g, Parametros par,
+           EngineConfig cfg, Politicas pol = {});
 
     void run(std::ostream& csv);          // simula el horizonte y escribe la serie anual
     MetricasAnuales medir(int anio);
@@ -68,12 +69,14 @@ private:
     void delincuencia();        // M5 anual
     void migracion();           // M-migración: gravedad, huye del conflicto (§6.3)
     void opinion();             // M-opinión/bienestar/radicalización (§6.6)
+    void dinamica_empresas();   // §3: extorsión, quiebra y entrada de empresas
     void economia_mensual();    // economía (KWEM) mensual
     void cerrar_macro();        // §8 paso 12: agrega PIB/empleo y realimenta el ciclo
     void recomputar_ingreso_hogar();
 
     Population&      p_;
     Households&      h_;
+    Firms&           f_;
     const Geography& g_;
     Parametros       par_;
     EngineConfig     cfg_;

@@ -64,6 +64,13 @@ struct Parametros {
     Real conformidad_social = 0.30;          // J: fuerza de conformidad con el municipio
     Real peso_seguridad_bienestar = 3.0;     // cuánto pesa el conflicto local en la satisfacción
 
+    // --- agente EMPRESA (spec §3) ---
+    Real empleos_objetivo_frac = 0.70;       // puestos ≈ frac · población en edad de trabajar
+    Real margen_trabajador_anual = 8'000'000.0; // valor agregado bruto por trabajador (COP/año)
+    Real margen_operativo = 0.15;            // utilidad operativa sobre valor agregado
+    Real extorsion_tasa = 0.20;              // 'vacuna' como fracción del bruto en zona de conflicto
+    Real prob_entrada_empresa = 0.12;        // reactivación/emprendimiento en buen ciclo
+
     // --- líneas de referencia ---
     Real linea_pobreza_mensual = 435'000.0;  // línea de pobreza monetaria per cápita (DANE 2023)
 };

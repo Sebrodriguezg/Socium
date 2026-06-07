@@ -18,6 +18,7 @@ add_library(socium_core
   src/economy/society.cpp
   src/agents/population.cpp
   src/agents/household.cpp
+  src/agents/firm.cpp
   src/geo/geography.cpp
   src/engine/engine.cpp
 )

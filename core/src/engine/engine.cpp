@@ -53,9 +53,9 @@ Politicas Politicas::load(const std::string& path) {
     return pol;
 }
 
-Engine::Engine(Population& p, Households& h, const Geography& g, Parametros par, EngineConfig cfg,
-               Politicas pol)
-    : p_(p), h_(h), g_(g), par_(par), cfg_(cfg), pol_(pol) {
+Engine::Engine(Population& p, Households& h, Firms& f, const Geography& g, Parametros par,
+               EngineConfig cfg, Politicas pol)
+    : p_(p), h_(h), f_(f), g_(g), par_(par), cfg_(cfg), pol_(pol) {
     #pragma omp parallel
     { seed_thread_rng(cfg_.seed); }
     // política de aseguramiento: afiliar a una fracción de los sin afiliación (M4)
@@ -158,9 +158,36 @@ void Engine::educacion() {
     }
 }
 
-// M2/M3 — empleo, informalidad e ingreso (Mincer)
+// participación laboral (probabilidad) por agente — oferta de trabajo (no es palanca)
+static inline double prob_participacion(const Population& p, std::int64_t i) {
+    double pp = 0.55 + 0.03 * static_cast<int>(p.nivel_educativo[i]);
+    if (p.edad[i] > 65) pp *= 0.4;
+    return std::min(1.0, pp);
+}
+
+// M2/M3 — empleo ENDÓGENO a la capacidad de las empresas por municipio + ingreso (Mincer)
 void Engine::mercado_laboral() {
     const std::int64_t N = p_.size();
+    const std::int64_t M = g_.n_municipios();
+
+    // 1) puestos de trabajo por municipio (empresas activas) modulados por el ciclo
+    std::vector<double> slots(static_cast<std::size_t>(M), 0.0);
+    for (std::int64_t k = 0; k < f_.size(); ++k)
+        if (f_.activa[k]) slots[f_.municipio[k]] += f_.empleos[k];
+    // ciclo económico + política de empleo/formalización (palanca = demanda de trabajo)
+    for (std::int64_t m = 0; m < M; ++m) slots[m] *= ciclo_ * pol_.empleo_mult;
+
+    // 2) participantes esperados por municipio (suma de probabilidades de participación)
+    std::vector<double> exppart(static_cast<std::size_t>(M), 0.0);
+    for (std::int64_t i = 0; i < N; ++i) {
+        if (!p_.vivo[i] || p_.edad[i] < 15 || p_.asiste_escuela[i]) continue;
+        exppart[p_.municipio_id[i]] += prob_participacion(p_, i);
+    }
+    // 3) tasa de ocupación por municipio = min(1, puestos / participantes)
+    std::vector<double> occ(static_cast<std::size_t>(M), 0.0);
+    for (std::int64_t m = 0; m < M; ++m)
+        occ[m] = std::min(1.0, slots[m] / std::max(1.0, exppart[m]));
+
     #pragma omp parallel for schedule(static)
     for (std::int64_t i = 0; i < N; ++i) {
         if (!p_.vivo[i]) continue;
@@ -169,14 +196,14 @@ void Engine::mercado_laboral() {
         if (p_.asiste_escuela[i]) { p_.situacion_laboral[i] = SituacionLaboral::Inactivo; p_.ingreso_laboral[i] = 0; continue; }
 
         const int anios = p_.anios_escolaridad[i];
-        double p_part = (0.55 + 0.03 * static_cast<int>(p_.nivel_educativo[i])) * pol_.empleo_mult;
-        if (edad > 65) p_part *= 0.4;
-        if (uniform01() > p_part) { p_.situacion_laboral[i] = SituacionLaboral::Inactivo; p_.ingreso_laboral[i] = 0; continue; }
-
-        // entre activos: desempleo objetivo (menor a mayor educación), modulado por el
-        // ciclo económico endógeno (cierre micro-macro): mejor ciclo -> menos desempleo
-        double pdesemp = par_.desempleo_objetivo * (anios >= 11 ? 0.8 : 1.4) / ciclo_;
-        if (uniform01() < pdesemp) { p_.situacion_laboral[i] = SituacionLaboral::Desocupado; p_.ingreso_laboral[i] = 0; continue; }
+        if (uniform01() > prob_participacion(p_, i)) {
+            p_.situacion_laboral[i] = SituacionLaboral::Inactivo; p_.ingreso_laboral[i] = 0; continue;
+        }
+        // ¿consigue uno de los puestos del municipio? (sesgo por educación, centrado ~1)
+        const double educ_factor = 0.75 + 0.10 * static_cast<int>(p_.nivel_educativo[i]);
+        if (uniform01() > occ[p_.municipio_id[i]] * educ_factor) {
+            p_.situacion_laboral[i] = SituacionLaboral::Desocupado; p_.ingreso_laboral[i] = 0; continue;
+        }
 
         // ocupado: ingreso Mincer + residual lognormal (dispersión salarial real;
         // sigma alto reproduce Gini ~0.5 y cola de Pareto, spec §1.4/§7.3)
@@ -342,6 +369,37 @@ void Engine::opinion() {
     }
 }
 
+// §3 — dinámica de empresas: utilidad, extorsión en zonas de conflicto, quiebra y
+// entrada. Cadena clave: conflicto -> extorsión -> quiebra -> menos empleos.
+// La política de seguridad (pol_.crimen_base_mult) reduce el conflicto efectivo.
+void Engine::dinamica_empresas() {
+    const std::int64_t F = f_.size();
+    #pragma omp parallel for schedule(static)
+    for (std::int64_t k = 0; k < F; ++k) {
+        const std::uint16_t m = f_.municipio[k];
+        double conf = (m < g_.mpio_conflicto.size()) ? g_.mpio_conflicto[m] : 0.0;
+        conf = std::min(1.0, std::max(0.0, conf * pol_.crimen_base_mult));  // seguridad reduce conflicto efectivo
+
+        if (f_.activa[k]) {
+            const double bruto = f_.empleos[k] * par_.margen_trabajador_anual * ciclo_;
+            const double extorsion = par_.extorsion_tasa * bruto * conf;
+            const double neto = par_.margen_operativo * bruto - extorsion;
+            f_.capital[k] += static_cast<float>(neto);
+            if (f_.capital[k] < 0.0f) { f_.activa[k] = 0; }   // quiebra -> pierde sus empleos
+            else if (neto > 0.0 && ciclo_ > 0.98 && uniform01() < 0.08 * ciclo_)
+                f_.empleos[k] += 1;                            // contratación en buen ciclo
+        } else {
+            // entrada/reactivación (emprendimiento) en ciclo favorable y baja extorsión
+            if (ciclo_ > 0.97 && uniform01() < par_.prob_entrada_empresa * (1.0 - conf)) {
+                f_.activa[k] = 1;
+                f_.tamano[k] = TamanoEmpresa::Micro;
+                f_.empleos[k] = 1 + static_cast<int>(uniform01() * 5);
+                f_.capital[k] = static_cast<float>(par_.margen_trabajador_anual);  // capital semilla
+            }
+        }
+    }
+}
+
 void Engine::economia_mensual() {
     EconomyParams ep;
     ep.rule = cfg_.regla_economia;
@@ -439,7 +497,8 @@ void Engine::run(std::ostream& csv) {
     for (int a = 1; a <= cfg_.horizonte_anios; ++a) {
         demografia();            // M7
         educacion();             // M1
-        mercado_laboral();       // M2/M3
+        dinamica_empresas();     // §3: extorsión/quiebra/entrada (fija la capacidad de empleo)
+        mercado_laboral();       // M2/M3 (empleo endógeno a las empresas)
         recomputar_ingreso_hogar();
         delincuencia();          // M5
         migracion();             // M-migración (§6.3)

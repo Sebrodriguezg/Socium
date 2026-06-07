@@ -6,6 +6,7 @@
 #include "socium/population.hpp"
 #include "socium/geography.hpp"
 #include "socium/household.hpp"
+#include "socium/firm.hpp"
 #include "socium/engine.hpp"
 
 #include <chrono>
@@ -48,10 +49,15 @@ int main(int argc, char** argv) {
     Households h = form_households(p, g, cfg.seed);
 
     Parametros par;  // valores con fuente (data/reference/parametros.yaml)
+    // empresas: puestos ≈ frac · población en edad de trabajar (15-65)
+    std::int64_t pet = 0;
+    for (std::int64_t i = 0; i < p.size(); ++i) if (p.edad[i] >= 15 && p.edad[i] <= 65) ++pet;
+    Firms f = crear_empresas(g, static_cast<std::int64_t>(par.empleos_objetivo_frac * pet), cfg.seed);
+    std::cerr << "empresas: " << f.size() << " (" << metrics::empleos_ofrecidos(f) << " empleos)\n";
     Politicas pol;
     const char* esc = arg(argc, argv, "--escenario", nullptr);
     if (esc) { pol = Politicas::load(esc); std::cerr << "escenario: " << esc << "\n"; }
-    Engine eng(p, h, g, par, cfg, pol);
+    Engine eng(p, h, f, g, par, cfg, pol);
 
     const char* out = arg(argc, argv, "--out", nullptr);
     std::ofstream fout;
