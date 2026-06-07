@@ -1,0 +1,964 @@
+# Esquema de métricas de Socium · Colombia (GENERADO)
+# Fuente: docs/model-spec/metrics-catalog.md
+# Generado por scripts/catalog_to_yaml.py el 2026-06-06 21:42
+# NO editar a mano: editar el catálogo .md y re-ejecutar el conversor.
+#
+# niveles: Ag=individuo Hg=hogar Mun=municipio Dep=departamento Nac=nación
+# roles:   E=estado-agente A=agregado-emergente P=palanca-política C=calibración
+meta:
+  source: docs/model-spec/metrics-catalog.md
+  domains: 16
+  metrics: 148
+domains:
+  - id: demografia_y_hogares
+    number: 0
+    title: "Demografía y hogares"
+    metrics:
+      - id: edad
+        name: "Edad"
+        definition: "años"
+        levels: [Ag]
+        roles: [E, C]
+        source: "Censo, GEIH"
+      - id: sexo_genero
+        name: "Sexo / género"
+        definition: "categórica"
+        levels: [Ag]
+        roles: [E, C]
+        source: "Censo"
+      - id: pertenencia_etnica
+        name: "Pertenencia étnica"
+        definition: "indígena/NARP/Rrom/ninguna"
+        levels: [Ag]
+        roles: [E, C]
+        source: "Censo"
+      - id: tamano_del_hogar
+        name: "Tamaño del hogar"
+        definition: "nº de personas"
+        levels: [Hg]
+        roles: [E, C]
+        source: "ECV, Censo"
+      - id: tipo_de_hogar
+        name: "Tipo de hogar"
+        definition: "unipersonal/nuclear/extenso…"
+        levels: [Hg]
+        roles: [E]
+        source: "ECV"
+      - id: estado_civil_union
+        name: "Estado civil / unión"
+        definition: "categórica"
+        levels: [Ag]
+        roles: [E]
+        source: "Censo"
+      - id: tasa_de_natalidad
+        name: "Tasa de natalidad"
+        definition: "nacimientos / 1.000 hab·año"
+        levels: [Nac, Dep]
+        roles: [A, C]
+        source: "DANE Estadísticas Vitales"
+      - id: tasa_de_fecundidad_total
+        name: "Tasa de fecundidad total"
+        definition: "hijos por mujer"
+        levels: [Dep]
+        roles: [A, C]
+        source: "DANE/ENDS"
+      - id: tasa_de_mortalidad
+        name: "Tasa de mortalidad"
+        definition: "defunciones / 1.000 hab·año"
+        levels: [Dep]
+        roles: [A, C]
+        source: "DANE EEVV"
+      - id: esperanza_de_vida_al_nacer
+        name: "Esperanza de vida al nacer"
+        definition: "años"
+        levels: [Dep, Nac]
+        roles: [A, C]
+        source: "DANE"
+      - id: estructura_etaria_piramide
+        name: "Estructura etaria / pirámide"
+        definition: "% por grupos de edad"
+        levels: [Dep]
+        roles: [A, C]
+        source: "Censo, proyecciones"
+      - id: razon_de_dependencia
+        name: "Razón de dependencia"
+        definition: "(menores+mayores)/PEA"
+        levels: [Dep]
+        roles: [A]
+        source: "DANE"
+      - id: densidad_poblacional
+        name: "Densidad poblacional"
+        definition: "hab/km²"
+        levels: [Mun]
+        roles: [E, C]
+        source: "Censo"
+      - id: tasa_de_urbanizacion
+        name: "Tasa de urbanización"
+        definition: "% población en cabecera"
+        levels: [Mun, Nac]
+        roles: [A, C]
+        source: "Censo"
+  - id: economia_macro
+    number: 1
+    title: "Economía macro"
+    metrics:
+      - id: pib
+        name: "PIB"
+        definition: "COP constantes y per cápita"
+        levels: [Nac, Dep]
+        roles: [A, C]
+        source: "DANE Cuentas Nacionales"
+      - id: crecimiento_del_pib
+        name: "Crecimiento del PIB"
+        definition: "% anual"
+        levels: [Nac, Dep]
+        roles: [A, C]
+        source: "DANE"
+      - id: pib_por_sectores
+        name: "PIB por sectores"
+        definition: "agro/industria/servicios/minero"
+        levels: [Dep]
+        roles: [A, C]
+        source: "DANE"
+      - id: inflacion_ipc
+        name: "Inflación (IPC)"
+        definition: "% anual"
+        levels: [Nac]
+        roles: [A, P, C]
+        source: "DANE / BanRep"
+      - id: tasa_de_interes_de_politica
+        name: "Tasa de interés de política"
+        definition: "%"
+        levels: [Nac]
+        roles: [P]
+        source: "BanRep"
+      - id: tasa_de_cambio
+        name: "Tasa de cambio"
+        definition: "COP/USD"
+        levels: [Nac]
+        roles: [A, C]
+        source: "BanRep"
+      - id: productividad_laboral
+        name: "Productividad laboral"
+        definition: "producto / ocupado"
+        levels: [Dep]
+        roles: [A, C]
+        source: "DANE"
+      - id: inversion_fbkf
+        name: "Inversión (FBKF)"
+        definition: "% del PIB"
+        levels: [Nac]
+        roles: [A, P]
+        source: "DANE"
+      - id: deficit_superavit_fiscal
+        name: "Déficit/superávit fiscal"
+        definition: "% del PIB"
+        levels: [Nac]
+        roles: [A, P]
+        source: "MinHacienda"
+      - id: deuda_publica
+        name: "Deuda pública"
+        definition: "% del PIB"
+        levels: [Nac]
+        roles: [A, P]
+        source: "MinHacienda"
+      - id: recaudo_tributario
+        name: "Recaudo tributario"
+        definition: "COP, % PIB"
+        levels: [Nac, Mun]
+        roles: [A, P, C]
+        source: "DIAN / DNP"
+      - id: gasto_publico_social
+        name: "Gasto público social"
+        definition: "COP por habitante, por sector"
+        levels: [Nac, Dep]
+        roles: [P, C]
+        source: "DNP"
+  - id: trabajo_y_mercado_laboral
+    number: 2
+    title: "Trabajo y mercado laboral"
+    metrics:
+      - id: situacion_laboral
+        name: "Situación laboral"
+        definition: "ocupado/desocupado/inactivo"
+        levels: [Ag]
+        roles: [E, C]
+        source: "GEIH"
+      - id: tasa_de_desempleo
+        name: "Tasa de desempleo"
+        definition: "% de la PEA"
+        levels: [Mun, Dep, Nac]
+        roles: [A, C]
+        source: "GEIH"
+      - id: tasa_de_ocupacion
+        name: "Tasa de ocupación"
+        definition: "% en edad de trabajar"
+        levels: [Dep]
+        roles: [A, C]
+        source: "GEIH"
+      - id: tasa_global_de_participacion
+        name: "Tasa global de participación"
+        definition: "PEA / PET"
+        levels: [Dep]
+        roles: [A, C]
+        source: "GEIH"
+      - id: informalidad_laboral
+        name: "Informalidad laboral"
+        definition: "% ocupados informales"
+        levels: [Mun, Dep]
+        roles: [A, P, C]
+        source: "GEIH (clave en CO)"
+      - id: subempleo
+        name: "Subempleo"
+        definition: "% subempleados"
+        levels: [Dep]
+        roles: [A, C]
+        source: "GEIH"
+      - id: sector_economico_del_empleo
+        name: "Sector económico del empleo"
+        definition: "rama CIIU"
+        levels: [Ag]
+        roles: [E]
+        source: "GEIH"
+      - id: posicion_ocupacional
+        name: "Posición ocupacional"
+        definition: "asalariado/cuenta propia/empleador"
+        levels: [Ag]
+        roles: [E]
+        source: "GEIH"
+      - id: salario_ingreso_laboral
+        name: "Salario / ingreso laboral"
+        definition: "COP/mes"
+        levels: [Ag]
+        roles: [E, C]
+        source: "GEIH"
+      - id: salario_minimo
+        name: "Salario mínimo"
+        definition: "COP/mes"
+        levels: [Nac]
+        roles: [P]
+        source: "Gobierno"
+      - id: cobertura_pensional
+        name: "Cobertura pensional"
+        definition: "% cotizantes/afiliados"
+        levels: [Ag, Dep]
+        roles: [E, A, P]
+        source: "PILA/ADRES"
+      - id: horas_trabajadas
+        name: "Horas trabajadas"
+        definition: "horas/semana"
+        levels: [Ag]
+        roles: [E]
+        source: "GEIH"
+      - id: brecha_salarial_de_genero
+        name: "Brecha salarial de género"
+        definition: "%"
+        levels: [Dep, Nac]
+        roles: [A, C]
+        source: "GEIH"
+      - id: trabajo_infantil
+        name: "Trabajo infantil"
+        definition: "% menores 5-17 trabajando"
+        levels: [Dep]
+        roles: [A, C]
+        source: "GEIH módulo"
+  - id: ingreso_riqueza_desigualdad_y_pobreza
+    number: 3
+    title: "Ingreso, riqueza, desigualdad y pobreza"
+    metrics:
+      - id: ingreso_del_hogar
+        name: "Ingreso del hogar"
+        definition: "COP/mes (per cápita)"
+        levels: [Hg]
+        roles: [E, C]
+        source: "GEIH/ENPH"
+      - id: riqueza_patrimonio
+        name: "Riqueza / patrimonio"
+        definition: "COP (stock)"
+        levels: [Ag, Hg]
+        roles: [E, A]
+        source: "ENPH (proxy)"
+      - id: coeficiente_de_gini
+        name: "Coeficiente de Gini"
+        definition: "[0,1] ingreso/riqueza"
+        levels: [Mun, Dep, Nac]
+        roles: [A, C]
+        source: "DANE"
+      - id: exponente_de_pareto_cola_alta
+        name: "Exponente de Pareto (cola alta)"
+        definition: "adimensional"
+        levels: [Nac]
+        roles: [A]
+        source: "derivado"
+      - id: participacion_del_top_1_10
+        name: "Participación del top 1% / 10%"
+        definition: "% del ingreso/riqueza"
+        levels: [Nac]
+        roles: [A, C]
+        source: "DIAN/DANE"
+      - id: pobreza_monetaria
+        name: "Pobreza monetaria"
+        definition: "% bajo línea de pobreza"
+        levels: [Mun, Dep, Nac]
+        roles: [A, P, C]
+        source: "DANE"
+      - id: pobreza_extrema
+        name: "Pobreza extrema"
+        definition: "% bajo línea de indigencia"
+        levels: [Dep]
+        roles: [A, C]
+        source: "DANE"
+      - id: pobreza_multidimensional_ipm
+        name: "Pobreza multidimensional (IPM)"
+        definition: "% hogares (15 privaciones)"
+        levels: [Mun, Dep]
+        roles: [A, P, C]
+        source: "DANE (oficial CO)"
+      - id: nbi
+        name: "NBI"
+        definition: "% con necesidades básicas insatisfechas"
+        levels: [Mun]
+        roles: [A, C]
+        source: "Censo"
+      - id: clasificacion_sisben_iv
+        name: "Clasificación SISBÉN IV"
+        definition: "grupos A/B/C/D"
+        levels: [Hg]
+        roles: [E, P]
+        source: "DNP"
+      - id: movilidad_social_intergeneracional
+        name: "Movilidad social intergeneracional"
+        definition: "correlación ingreso padres-hijos"
+        levels: [Nac]
+        roles: [A]
+        source: "estudios/ELCA"
+      - id: transferencias_recibidas
+        name: "Transferencias recibidas"
+        definition: "COP (subsidios)"
+        levels: [Hg]
+        roles: [E, P]
+        source: "Prosperidad Social"
+  - id: educacion
+    number: 4
+    title: "Educación"
+    metrics:
+      - id: anos_de_escolaridad
+        name: "Años de escolaridad"
+        definition: "años"
+        levels: [Ag]
+        roles: [E, C]
+        source: "GEIH/Censo"
+      - id: nivel_educativo_alcanzado
+        name: "Nivel educativo alcanzado"
+        definition: "ninguno…posgrado"
+        levels: [Ag]
+        roles: [E, C]
+        source: "Censo"
+      - id: asistencia_escolar
+        name: "Asistencia escolar"
+        definition: "sí/no"
+        levels: [Ag]
+        roles: [E, C]
+        source: "SIMAT"
+      - id: tasa_de_matricula_neta_bruta
+        name: "Tasa de matrícula (neta/bruta)"
+        definition: "% por nivel"
+        levels: [Mun, Dep]
+        roles: [A, P, C]
+        source: "SIMAT"
+      - id: tasa_de_desercion_escolar
+        name: "Tasa de deserción escolar"
+        definition: "%"
+        levels: [Mun, Dep]
+        roles: [A, P, C]
+        source: "MinEducación"
+      - id: cobertura_educacion_superior
+        name: "Cobertura educación superior"
+        definition: "%"
+        levels: [Dep]
+        roles: [A, P, C]
+        source: "SNIES"
+      - id: tasa_de_alfabetizacion
+        name: "Tasa de alfabetización"
+        definition: "% ≥15 años"
+        levels: [Dep]
+        roles: [A, C]
+        source: "Censo"
+      - id: resultados_saber_11_pisa
+        name: "Resultados Saber 11 / PISA"
+        definition: "puntaje"
+        levels: [Mun, Nac]
+        roles: [A, C]
+        source: "ICFES/OCDE"
+      - id: razon_alumno_docente
+        name: "Razón alumno/docente"
+        definition: "nº"
+        levels: [Mun]
+        roles: [E, C]
+        source: "MinEducación"
+      - id: gasto_publico_en_educacion
+        name: "Gasto público en educación"
+        definition: "% PIB / por alumno"
+        levels: [Nac]
+        roles: [P]
+        source: "DNP"
+      - id: calidad_docente
+        name: "Calidad docente"
+        definition: "escalafón/formación"
+        levels: [Mun]
+        roles: [E]
+        source: "MinEducación"
+  - id: salud
+    number: 5
+    title: "Salud"
+    metrics:
+      - id: afiliacion_al_sgsss
+        name: "Afiliación al SGSSS"
+        definition: "contributivo/subsidiado/no"
+        levels: [Ag]
+        roles: [E, P, C]
+        source: "ADRES/SISPRO"
+      - id: cobertura_de_aseguramiento
+        name: "Cobertura de aseguramiento"
+        definition: "% afiliados"
+        levels: [Dep]
+        roles: [A, P, C]
+        source: "MinSalud"
+      - id: mortalidad_infantil
+        name: "Mortalidad infantil"
+        definition: "/ 1.000 nacidos vivos"
+        levels: [Dep]
+        roles: [A, C]
+        source: "DANE/SISPRO"
+      - id: mortalidad_materna
+        name: "Mortalidad materna"
+        definition: "/ 100.000 nacidos"
+        levels: [Dep]
+        roles: [A, C]
+        source: "SISPRO"
+      - id: desnutricion_infantil
+        name: "Desnutrición infantil"
+        definition: "% crónica/aguda"
+        levels: [Dep]
+        roles: [A, C]
+        source: "ENSIN"
+      - id: prevalencia_enfermedades_cronicas
+        name: "Prevalencia enfermedades crónicas"
+        definition: "%"
+        levels: [Dep]
+        roles: [A]
+        source: "SISPRO"
+      - id: salud_mental_suicidio
+        name: "Salud mental / suicidio"
+        definition: "tasa / 100.000"
+        levels: [Dep]
+        roles: [A, C]
+        source: "Medicina Legal"
+      - id: embarazo_adolescente
+        name: "Embarazo adolescente"
+        definition: "% nacidos de madres <19"
+        levels: [Dep]
+        roles: [A, C]
+        source: "DANE"
+      - id: esperanza_de_vida_saludable
+        name: "Esperanza de vida saludable"
+        definition: "años"
+        levels: [Nac]
+        roles: [A]
+        source: "OMS"
+      - id: medicos_camas_por_habitante
+        name: "Médicos / camas por habitante"
+        definition: "nº / 1.000 hab"
+        levels: [Dep]
+        roles: [E, C]
+        source: "MinSalud"
+      - id: gasto_en_salud
+        name: "Gasto en salud"
+        definition: "% PIB / per cápita"
+        levels: [Nac]
+        roles: [P]
+        source: "DNP"
+      - id: acceso_barreras_a_servicios
+        name: "Acceso/barreras a servicios"
+        definition: "% con barrera"
+        levels: [Dep]
+        roles: [A, C]
+        source: "ECV"
+  - id: vivienda_y_servicios_publicos
+    number: 6
+    title: "Vivienda y servicios públicos"
+    metrics:
+      - id: tenencia_de_vivienda
+        name: "Tenencia de vivienda"
+        definition: "propia/arriendo/otra"
+        levels: [Hg]
+        roles: [E, C]
+        source: "ECV"
+      - id: deficit_habitacional
+        name: "Déficit habitacional"
+        definition: "% (cuantitativo/cualitativo)"
+        levels: [Mun]
+        roles: [A, P, C]
+        source: "DANE"
+      - id: hacinamiento
+        name: "Hacinamiento"
+        definition: "personas/cuarto"
+        levels: [Hg]
+        roles: [E, C]
+        source: "ECV"
+      - id: acceso_a_acueducto
+        name: "Acceso a acueducto"
+        definition: "% con cobertura"
+        levels: [Mun]
+        roles: [A, P, C]
+        source: "DANE/SUI"
+      - id: acceso_a_alcantarillado
+        name: "Acceso a alcantarillado"
+        definition: "%"
+        levels: [Mun]
+        roles: [A, P, C]
+        source: "SUI"
+      - id: acceso_a_energia_electrica
+        name: "Acceso a energía eléctrica"
+        definition: "%"
+        levels: [Mun]
+        roles: [A, C]
+        source: "SUI"
+      - id: acceso_a_gas_recoleccion_basuras
+        name: "Acceso a gas/recolección basuras"
+        definition: "%"
+        levels: [Mun]
+        roles: [A, C]
+        source: "SUI"
+      - id: estrato_socioeconomico
+        name: "Estrato socioeconómico"
+        definition: "1–6"
+        levels: [Hg]
+        roles: [E, P]
+        source: "catastro"
+      - id: material_de_paredes_pisos
+        name: "Material de paredes/pisos"
+        definition: "categórica"
+        levels: [Hg]
+        roles: [E]
+        source: "Censo"
+  - id: seguridad_violencia_y_conflicto_armado
+    number: 7
+    title: "Seguridad, violencia y conflicto armado"
+    metrics:
+      - id: tasa_de_homicidios
+        name: "Tasa de homicidios"
+        definition: "/ 100.000 hab"
+        levels: [Mun, Dep]
+        roles: [A, C]
+        source: "Medicina Legal/Policía"
+      - id: hurtos_delitos_contra_patrimonio
+        name: "Hurtos / delitos contra patrimonio"
+        definition: "tasa"
+        levels: [Mun]
+        roles: [A, C]
+        source: "Policía Nacional"
+      - id: violencia_intrafamiliar
+        name: "Violencia intrafamiliar"
+        definition: "tasa"
+        levels: [Mun]
+        roles: [A, C]
+        source: "Medicina Legal"
+      - id: violencia_de_genero_feminicidios
+        name: "Violencia de género / feminicidios"
+        definition: "tasa"
+        levels: [Dep]
+        roles: [A, C]
+        source: "Medicina Legal"
+      - id: victimas_del_conflicto_armado
+        name: "Víctimas del conflicto armado"
+        definition: "nº registrados"
+        levels: [Mun]
+        roles: [E, A, C]
+        source: "UARIV/RUV"
+      - id: desplazamiento_forzado
+        name: "Desplazamiento forzado"
+        definition: "personas/año"
+        levels: [Mun]
+        roles: [A, C]
+        source: "UARIV"
+      - id: presencia_de_grupos_armados
+        name: "Presencia de grupos armados"
+        definition: "índice/categórica"
+        levels: [Mun]
+        roles: [E, P]
+        source: "FIP/Defensoría"
+      - id: cultivos_ilicitos
+        name: "Cultivos ilícitos"
+        definition: "hectáreas de coca"
+        levels: [Mun]
+        roles: [A, P, C]
+        source: "UNODC/SIMCI"
+      - id: minas_antipersona_secuestro_extorsion
+        name: "Minas antipersona / secuestro/extorsión"
+        definition: "nº"
+        levels: [Mun]
+        roles: [A, C]
+        source: "entidades"
+      - id: percepcion_de_seguridad
+        name: "Percepción de seguridad"
+        definition: "% se siente seguro"
+        levels: [Mun]
+        roles: [A, C]
+        source: "ECSC (DANE)"
+  - id: instituciones_justicia_y_gobernanza
+    number: 8
+    title: "Instituciones, justicia y gobernanza"
+    metrics:
+      - id: indice_de_corrupcion_transparencia
+        name: "Índice de corrupción/transparencia"
+        definition: "puntaje"
+        levels: [Dep, Nac]
+        roles: [A, P, C]
+        source: "Transparencia por Colombia"
+      - id: capacidad_desempeno_fiscal_municipal
+        name: "Capacidad/desempeño fiscal municipal"
+        definition: "índice"
+        levels: [Mun]
+        roles: [E, C]
+        source: "DNP"
+      - id: eficiencia_del_gasto_publico
+        name: "Eficiencia del gasto público"
+        definition: "índice"
+        levels: [Mun]
+        roles: [A]
+        source: "DNP"
+      - id: acceso_a_la_justicia_impunidad
+        name: "Acceso a la justicia / impunidad"
+        definition: "% casos resueltos"
+        levels: [Dep]
+        roles: [A, C]
+        source: "Fiscalía/Rama Judicial"
+      - id: confianza_en_instituciones
+        name: "Confianza en instituciones"
+        definition: "% confía"
+        levels: [Nac]
+        roles: [A, C]
+        source: "LAPOP"
+      - id: estado_de_derecho
+        name: "Estado de derecho"
+        definition: "índice"
+        levels: [Nac]
+        roles: [A, C]
+        source: "WJP"
+      - id: cobertura_del_estado_presencia_institucional
+        name: "Cobertura del Estado/presencia institucional"
+        definition: "índice"
+        levels: [Mun]
+        roles: [E, P]
+        source: "DNP"
+      - id: tasa_de_tramitologia_registro_empresarial
+        name: "Tasa de tramitología / registro empresarial"
+        definition: "nº/tiempo"
+        levels: [Mun]
+        roles: [A]
+        source: "Confecámaras"
+  - id: capital_social_cultura_y_confianza
+    number: 9
+    title: "Capital social, cultura y confianza"
+    metrics:
+      - id: confianza_interpersonal
+        name: "Confianza interpersonal"
+        definition: "% confía en otros"
+        levels: [Ag, Nac]
+        roles: [E, A, C]
+        source: "LAPOP/ECC"
+      - id: participacion_en_organizaciones
+        name: "Participación en organizaciones"
+        definition: "% pertenece"
+        levels: [Ag]
+        roles: [E, C]
+        source: "ECC (DANE)"
+      - id: capital_social_indice
+        name: "Capital social (índice)"
+        definition: "compuesto"
+        levels: [Dep]
+        roles: [A]
+        source: "Barómetro"
+      - id: religion_religiosidad
+        name: "Religión / religiosidad"
+        definition: "categórica/%"
+        levels: [Ag]
+        roles: [E]
+        source: "encuestas"
+      - id: tolerancia_discriminacion
+        name: "Tolerancia / discriminación"
+        definition: "índice"
+        levels: [Nac]
+        roles: [A, C]
+        source: "LAPOP"
+      - id: redes_de_apoyo_del_hogar
+        name: "Redes de apoyo del hogar"
+        definition: "sí/no"
+        levels: [Hg]
+        roles: [E]
+        source: "ECV"
+  - id: politica_opinion_y_participacion
+    number: 10
+    title: "Política, opinión y participación"
+    metrics:
+      - id: opinion_orientacion_politica
+        name: "Opinión/orientación política"
+        definition: "espectro/categórica"
+        levels: [Ag]
+        roles: [E, A]
+        source: "encuestas"
+      - id: intencion_de_voto_preferencia
+        name: "Intención de voto / preferencia"
+        definition: "categórica"
+        levels: [Ag]
+        roles: [E, A]
+        source: "encuestas"
+      - id: abstencion_electoral
+        name: "Abstención electoral"
+        definition: "%"
+        levels: [Mun, Nac]
+        roles: [A, C]
+        source: "Registraduría"
+      - id: polarizacion_politica
+        name: "Polarización política"
+        definition: "índice de dispersión"
+        levels: [Nac]
+        roles: [A]
+        source: "derivado"
+      - id: aprobacion_del_gobierno
+        name: "Aprobación del gobierno"
+        definition: "%"
+        levels: [Nac]
+        roles: [A, C]
+        source: "encuestas"
+      - id: protesta_social
+        name: "Protesta social"
+        definition: "nº eventos / participación"
+        levels: [Mun]
+        roles: [A]
+        source: "observatorios"
+      - id: confianza_en_la_democracia
+        name: "Confianza en la democracia"
+        definition: "% apoyo"
+        levels: [Nac]
+        roles: [A, C]
+        source: "LAPOP"
+  - id: medio_ambiente_clima_y_recursos
+    number: 11
+    title: "Medio ambiente, clima y recursos"
+    metrics:
+      - id: emisiones_de_co2eq
+        name: "Emisiones de CO₂eq"
+        definition: "toneladas"
+        levels: [Nac, Dep]
+        roles: [A, P, C]
+        source: "IDEAM"
+      - id: deforestacion
+        name: "Deforestación"
+        definition: "hectáreas/año"
+        levels: [Mun, Dep]
+        roles: [A, P, C]
+        source: "IDEAM/SMByC"
+      - id: calidad_del_aire_pm2_5
+        name: "Calidad del aire (PM2.5)"
+        definition: "µg/m³"
+        levels: [Mun]
+        roles: [A, C]
+        source: "SISAIRE/IDEAM"
+      - id: acceso_a_agua_potable_segura
+        name: "Acceso a agua potable segura"
+        definition: "%"
+        levels: [Mun]
+        roles: [A, C]
+        source: "SUI"
+      - id: cobertura_forestal_areas_protegidas
+        name: "Cobertura forestal / áreas protegidas"
+        definition: "% territorio"
+        levels: [Dep]
+        roles: [A]
+        source: "IDEAM/PNN"
+      - id: vulnerabilidad_riesgo_climatico
+        name: "Vulnerabilidad/riesgo climático"
+        definition: "índice"
+        levels: [Mun]
+        roles: [E, C]
+        source: "IDEAM/UNGRD"
+      - id: desastres_naturales
+        name: "Desastres naturales"
+        definition: "nº eventos/afectados"
+        levels: [Mun]
+        roles: [A]
+        source: "UNGRD"
+      - id: huella_hidrica_estres_hidrico
+        name: "Huella hídrica / estrés hídrico"
+        definition: "índice"
+        levels: [Dep]
+        roles: [A]
+        source: "IDEAM"
+      - id: biodiversidad
+        name: "Biodiversidad"
+        definition: "índice"
+        levels: [Dep]
+        roles: [A]
+        source: "IAvH"
+  - id: infraestructura_movilidad_y_conectividad_digital
+    number: 12
+    title: "Infraestructura, movilidad y conectividad digital"
+    metrics:
+      - id: red_vial_estado
+        name: "Red vial / estado"
+        definition: "km, % pavimentado"
+        levels: [Dep]
+        roles: [E, P, C]
+        source: "INVÍAS/ANI"
+      - id: tiempo_de_viaje_a_cabecera_servicios
+        name: "Tiempo de viaje a cabecera/servicios"
+        definition: "minutos"
+        levels: [Mun]
+        roles: [A, C]
+        source: "DNP/TerriData"
+      - id: penetracion_de_internet
+        name: "Penetración de internet"
+        definition: "% hogares con acceso"
+        levels: [Mun, Dep]
+        roles: [A, P, C]
+        source: "MinTIC"
+      - id: penetracion_movil_smartphones
+        name: "Penetración móvil / smartphones"
+        definition: "%"
+        levels: [Dep]
+        roles: [A, C]
+        source: "MinTIC"
+      - id: velocidad_de_internet
+        name: "Velocidad de internet"
+        definition: "Mbps"
+        levels: [Dep]
+        roles: [A]
+        source: "MinTIC"
+      - id: acceso_a_energia_cobertura
+        name: "Acceso a energía (cobertura)"
+        definition: "%"
+        levels: [Mun]
+        roles: [A, C]
+        source: "UPME"
+      - id: bancarizacion_inclusion_financiera
+        name: "Bancarización / inclusión financiera"
+        definition: "% con producto financiero"
+        levels: [Dep]
+        roles: [A, P, C]
+        source: "Banca de las Oportunidades"
+      - id: uso_de_gobierno_digital
+        name: "Uso de gobierno digital"
+        definition: "% trámites en línea"
+        levels: [Nac]
+        roles: [A]
+        source: "MinTIC"
+  - id: migracion_y_movilidad_poblacional
+    number: 13
+    title: "Migración y movilidad poblacional"
+    metrics:
+      - id: migracion_interna
+        name: "Migración interna"
+        definition: "flujos entre municipios"
+        levels: [Mun]
+        roles: [A, C]
+        source: "Censo/GEIH"
+      - id: inmigracion_venezolana
+        name: "Inmigración (venezolana)"
+        definition: "nº/stock por municipio"
+        levels: [Mun, Dep]
+        roles: [E, A, C]
+        source: "Migración Colombia"
+      - id: emigracion_internacional
+        name: "Emigración internacional"
+        definition: "nº/año"
+        levels: [Nac]
+        roles: [A, C]
+        source: "Migración Colombia"
+      - id: remesas
+        name: "Remesas"
+        definition: "USD recibidos"
+        levels: [Dep, Nac]
+        roles: [A, C]
+        source: "BanRep"
+      - id: desplazamiento_intraurbano
+        name: "Desplazamiento intraurbano"
+        definition: "nº"
+        levels: [Mun]
+        roles: [A]
+        source: "UARIV"
+      - id: estatus_migratorio_ppt
+        name: "Estatus migratorio (PPT)"
+        definition: "regular/irregular"
+        levels: [Ag]
+        roles: [E, P]
+        source: "Migración"
+  - id: genero_y_grupos_poblacionales
+    number: 14
+    title: "Género y grupos poblacionales"
+    metrics:
+      - id: brecha_de_genero_participacion_laboral
+        name: "Brecha de género (participación laboral)"
+        definition: "pp"
+        levels: [Dep]
+        roles: [A, C]
+        source: "GEIH"
+      - id: brecha_de_ingresos_por_genero
+        name: "Brecha de ingresos por género"
+        definition: "%"
+        levels: [Dep]
+        roles: [A, C]
+        source: "GEIH"
+      - id: uso_del_tiempo_trabajo_no_remunerado
+        name: "Uso del tiempo / trabajo no remunerado"
+        definition: "horas"
+        levels: [Ag]
+        roles: [E, C]
+        source: "ENUT (DANE)"
+      - id: mujeres_en_cargos_de_poder
+        name: "Mujeres en cargos de poder"
+        definition: "%"
+        levels: [Nac]
+        roles: [A, C]
+        source: "ONU Mujeres"
+      - id: indicadores_por_grupo_etnico
+        name: "Indicadores por grupo étnico"
+        definition: "varios desagregados"
+        levels: [Dep]
+        roles: [A, C]
+        source: "Censo"
+      - id: brechas_urbano_rural
+        name: "Brechas urbano-rural"
+        definition: "razón rural/urbano de cada métrica"
+        levels: [Mun]
+        roles: [A, C]
+        source: "derivado"
+  - id: bienestar_subjetivo
+    number: 15
+    title: "Bienestar subjetivo"
+    metrics:
+      - id: satisfaccion_con_la_vida
+        name: "Satisfacción con la vida"
+        definition: "escala 0–10"
+        levels: [Ag]
+        roles: [E, A, C]
+        source: "ECSC/encuestas"
+      - id: felicidad_percibida
+        name: "Felicidad percibida"
+        definition: "escala"
+        levels: [Ag]
+        roles: [A, C]
+        source: "World Happiness/encuestas"
+      - id: percepcion_de_situacion_economica
+        name: "Percepción de situación económica"
+        definition: "mejor/igual/peor"
+        levels: [Hg]
+        roles: [A, C]
+        source: "encuestas"
+      - id: expectativas_a_futuro
+        name: "Expectativas a futuro"
+        definition: "índice"
+        levels: [Ag]
+        roles: [E, A]
+        source: "encuestas"
