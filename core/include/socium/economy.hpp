@@ -3,9 +3,12 @@
 // Refs: Drăgulescu-Yakovenko 2000 (DY), Chakraborti-Chakrabarti 2000 (ahorro),
 //       Boghosian 2014 (Yard-Sale), Bisi-Spiga-Toscani 2009 (impuesto+redistribución).
 // Ver docs/theory/bibliography-review.md
+#include <algorithm>
 #include <cstdint>
 #include <string>
 #include <vector>
+
+#include "socium/rng.hpp"
 
 namespace socium {
 
@@ -20,6 +23,32 @@ enum class Rule {
 
 Rule        rule_from_string(const std::string& s);
 const char* rule_name(Rule r);
+
+// Aplica una transacción de intercambio de riqueza a un par (wi, wj). Conserva el
+// total del par. Inline para reutilizar tanto en el motor mean-field (Economy) como
+// en la economía acoplada a la población real. Usa el RNG del hilo.
+inline void apply_exchange(Real& wi, Real& wj, Rule rule, Real lambda, Real f) {
+    switch (rule) {
+        case Rule::DragulescuYakovenko: {
+            const Real total = wi + wj;
+            wi = uniform01() * total;
+            wj = total - wi;
+            break;
+        }
+        case Rule::SavingPropensity: {
+            const Real total = wi + wj;
+            wi = lambda * wi + uniform01() * (1.0 - lambda) * total;
+            wj = total - wi;
+            break;
+        }
+        case Rule::YardSale: {
+            const Real stake = f * std::min(wi, wj);
+            if (uniform01() < 0.5) { wi += stake; wj -= stake; }
+            else                   { wi -= stake; wj += stake; }
+            break;
+        }
+    }
+}
 
 struct EconomyParams {
     Index n_agents       = 1'000'000;

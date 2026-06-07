@@ -38,33 +38,6 @@ Economy::Economy(EconomyParams p) : p_(p) {
     { seed_thread_rng(p_.seed); }
 }
 
-// Aplica la regla de intercambio a un par (i, j) usando el RNG del hilo.
-static inline void interact(Real& wi, Real& wj, const EconomyParams& p) {
-    switch (p.rule) {
-        case Rule::DragulescuYakovenko: {
-            const Real total = wi + wj;
-            const Real eps   = uniform01();
-            wi = eps * total;
-            wj = total - wi;
-            break;
-        }
-        case Rule::SavingPropensity: {
-            const Real total = wi + wj;
-            const Real eps   = uniform01();
-            const Real lam   = p.lambda;
-            wi = lam * wi + eps * (1.0 - lam) * total;
-            wj = total - wi;                       // conserva el total exactamente
-            break;
-        }
-        case Rule::YardSale: {
-            const Real stake = p.f * std::min(wi, wj);
-            if (uniform01() < 0.5) { wi += stake; wj -= stake; }
-            else                   { wi -= stake; wj += stake; }
-            break;
-        }
-    }
-}
-
 void Economy::sweep() {
     // Emparejamiento aleatorio SIN colisiones: barajamos el orden (Fisher-Yates,
     // serial y barato) y emparejamos (2k, 2k+1). Así cada agente participa en a lo
@@ -81,7 +54,7 @@ void Economy::sweep() {
     for (Index k = 0; k < n_pairs; ++k) {
         const Index i = order_[2 * k];
         const Index j = order_[2 * k + 1];
-        interact(wealth_[i], wealth_[j], p_);
+        apply_exchange(wealth_[i], wealth_[j], p_.rule, p_.lambda, p_.f);
     }
 }
 
