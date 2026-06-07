@@ -25,6 +25,8 @@ struct Geography {
     std::vector<float>         mpio_urbano;     // fracción urbana [0,1] (pct cabecera/100)
     std::vector<float>         mpio_conflicto;  // índice de conflicto [0,1] (homicidios)
 
+    std::vector<float>         dpto_productividad;  // PIB pc del depto / nacional (ratio)
+
     // búsqueda por código DANE
     std::unordered_map<std::string, std::uint8_t>  idx_dpto;
     std::unordered_map<std::string, std::uint16_t> idx_mpio;
@@ -43,6 +45,9 @@ struct Geography {
 
     // Carga el índice de conflicto por municipio (conflicto_municipal.csv, col indice_conflicto).
     std::int64_t cargar_conflicto(const std::string& path);
+
+    // Carga la productividad relativa por departamento (pib_departamental.csv, col ratio).
+    std::int64_t cargar_pib(const std::string& path);
 };
 
 } // namespace socium

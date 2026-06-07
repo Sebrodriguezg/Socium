@@ -9,34 +9,34 @@
 <line x1="64" y1="268.0" x2="556" y2="268.0" stroke="#eee"/>
 <text x="54" y="204.00000000000003" font-size="11" text-anchor="end">28%</text>
 <line x1="64" y1="200.00000000000003" x2="556" y2="200.00000000000003" stroke="#eee"/>
-<text x="54" y="136.00000000000009" font-size="11" text-anchor="end">31%</text>
+<text x="54" y="136.00000000000009" font-size="11" text-anchor="end">32%</text>
 <line x1="64" y1="132.00000000000009" x2="556" y2="132.00000000000009" stroke="#eee"/>
-<text x="54" y="68.0" font-size="11" text-anchor="end">33%</text>
+<text x="54" y="68.0" font-size="11" text-anchor="end">35%</text>
 <line x1="64" y1="64.0" x2="556" y2="64.0" stroke="#eee"/>
 <text x="64.0" y="354" font-size="11" text-anchor="middle">2026</text>
 <text x="187.0" y="354" font-size="11" text-anchor="middle">2027</text>
 <text x="310.0" y="354" font-size="11" text-anchor="middle">2028</text>
 <text x="433.0" y="354" font-size="11" text-anchor="middle">2029</text>
 <text x="556.0" y="354" font-size="11" text-anchor="middle">2030</text>
-<polyline points="64.0,126.0 187.0,122.5 310.0,119.6 433.0,115.8 556.0,111.8" fill="none" stroke="#888888" stroke-width="2.5"/>
-<circle cx="64.0" cy="126.0" r="3" fill="#888888"/>
-<circle cx="187.0" cy="122.5" r="3" fill="#888888"/>
-<circle cx="310.0" cy="119.6" r="3" fill="#888888"/>
-<circle cx="433.0" cy="115.8" r="3" fill="#888888"/>
-<circle cx="556.0" cy="111.8" r="3" fill="#888888"/>
+<polyline points="64.0,122.2 187.0,117.7 310.0,115.2 433.0,109.9 556.0,107.7" fill="none" stroke="#888888" stroke-width="2.5"/>
+<circle cx="64.0" cy="122.2" r="3" fill="#888888"/>
+<circle cx="187.0" cy="117.7" r="3" fill="#888888"/>
+<circle cx="310.0" cy="115.2" r="3" fill="#888888"/>
+<circle cx="433.0" cy="109.9" r="3" fill="#888888"/>
+<circle cx="556.0" cy="107.7" r="3" fill="#888888"/>
 <text x="562" y="38" font-size="12" fill="#888888">baseline</text>
-<polyline points="64.0,288.2 187.0,277.4 310.0,268.8 433.0,259.0 556.0,252.5" fill="none" stroke="#E94560" stroke-width="2.5"/>
-<circle cx="64.0" cy="288.2" r="3" fill="#E94560"/>
-<circle cx="187.0" cy="277.4" r="3" fill="#E94560"/>
-<circle cx="310.0" cy="268.8" r="3" fill="#E94560"/>
-<circle cx="433.0" cy="259.0" r="3" fill="#E94560"/>
-<circle cx="556.0" cy="252.5" r="3" fill="#E94560"/>
+<polyline points="64.0,292.3 187.0,282.8 310.0,273.9 433.0,265.2 556.0,257.9" fill="none" stroke="#E94560" stroke-width="2.5"/>
+<circle cx="64.0" cy="292.3" r="3" fill="#E94560"/>
+<circle cx="187.0" cy="282.8" r="3" fill="#E94560"/>
+<circle cx="310.0" cy="273.9" r="3" fill="#E94560"/>
+<circle cx="433.0" cy="265.2" r="3" fill="#E94560"/>
+<circle cx="556.0" cy="257.9" r="3" fill="#E94560"/>
 <text x="562" y="56" font-size="12" fill="#E94560">cepeda</text>
-<polyline points="64.0,139.5 187.0,139.3 310.0,137.5 433.0,135.2 556.0,136.8" fill="none" stroke="#0F3460" stroke-width="2.5"/>
-<circle cx="64.0" cy="139.5" r="3" fill="#0F3460"/>
-<circle cx="187.0" cy="139.3" r="3" fill="#0F3460"/>
-<circle cx="310.0" cy="137.5" r="3" fill="#0F3460"/>
-<circle cx="433.0" cy="135.2" r="3" fill="#0F3460"/>
-<circle cx="556.0" cy="136.8" r="3" fill="#0F3460"/>
+<polyline points="64.0,150.3 187.0,149.6 310.0,147.1 433.0,144.9 556.0,143.6" fill="none" stroke="#0F3460" stroke-width="2.5"/>
+<circle cx="64.0" cy="150.3" r="3" fill="#0F3460"/>
+<circle cx="187.0" cy="149.6" r="3" fill="#0F3460"/>
+<circle cx="310.0" cy="147.1" r="3" fill="#0F3460"/>
+<circle cx="433.0" cy="144.9" r="3" fill="#0F3460"/>
+<circle cx="556.0" cy="143.6" r="3" fill="#0F3460"/>
 <text x="562" y="74" font-size="12" fill="#0F3460">de_la_espriella</text>
 </svg>

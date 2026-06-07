@@ -17,7 +17,8 @@ struct Parametros {
     Real penalizacion_informalidad = 0.30;  // supuesto, calibrar GEIH
     Real brecha_genero = 0.12;               // supuesto, calibrar GEIH
     Real smlv = 1'423'500.0;                 // salario mínimo 2025 (COP/mes), referencia
-    Real sigma_ingreso = 0.95;               // dispersión lognormal — calibrado a Gini DANE 0.553
+    Real sigma_ingreso = 0.80;               // dispersión lognormal intra-depto (Gini con elast)
+    Real elasticidad_productividad = 1.1;    // ingreso ∝ (PIB pc depto)^elast — desigualdad espacial
     Real calib_ingreso = 1.8;                // escala de recursos del hogar (perceptores por hogar
                                              // sub-contados + otros ingresos) — calibrado a pobreza GEIH
 
@@ -69,7 +70,7 @@ struct Parametros {
     Real peso_seguridad_bienestar = 3.0;     // cuánto pesa el conflicto local en la satisfacción
 
     // --- agente EMPRESA (spec §3) ---
-    Real empleos_objetivo_frac = 0.52;       // puestos ≈ frac · pob. en edad de trabajar — calibra desempleo a ~10% (GEIH)
+    Real empleos_objetivo_frac = 0.50;       // puestos ≈ frac · pob. en edad de trabajar — calibra desempleo a ~10% (GEIH)
     Real margen_trabajador_anual = 8'000'000.0; // valor agregado bruto por trabajador (COP/año)
     Real margen_operativo = 0.15;            // utilidad operativa sobre valor agregado
     Real extorsion_tasa = 0.20;              // 'vacuna' como fracción del bruto en zona de conflicto

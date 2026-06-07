@@ -117,6 +117,25 @@ std::int64_t Geography::cargar_conflicto(const std::string& path) {
     return con;
 }
 
+std::int64_t Geography::cargar_pib(const std::string& path) {
+    dpto_productividad.assign(dpto_codigo.size(), 1.0f);
+    std::ifstream in(path);
+    if (!in) return 0;
+    std::string line;
+    std::getline(in, line); // encabezado: cod_dpto,pib_pc_cop,ratio
+    std::int64_t con = 0;
+    while (std::getline(in, line)) {
+        if (line.empty()) continue;
+        auto f = split_csv(line);
+        if (f.size() < 3) continue;
+        auto it = idx_dpto.find(f[0]);
+        if (it == idx_dpto.end()) continue;
+        dpto_productividad[it->second] = to_float(f[2]);
+        ++con;
+    }
+    return con;
+}
+
 std::vector<std::int64_t> Geography::conteo_municipios_por_depto() const {
     std::vector<std::int64_t> c(dpto_codigo.size(), 0);
     for (std::uint8_t d : mpio_dpto) ++c[d];

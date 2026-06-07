@@ -44,6 +44,7 @@ int main(int argc, char** argv) {
     Geography g = Geography::load_csv(arg(argc, argv, "--geo", "data/reference/divipola.csv"));
     g.cargar_pesos(arg(argc, argv, "--pob", "data/reference/poblacion_municipal.csv"));
     g.cargar_conflicto(arg(argc, argv, "--conflicto", "data/reference/conflicto_municipal.csv"));
+    g.cargar_pib(arg(argc, argv, "--pib", "data/reference/pib_departamental.csv"));
     Population p = build_synthetic(n, cfg.seed);
     asignar_municipios(p, g, cfg.seed);
     ajustar_educacion_espacial(p, g);   // desigualdad educativa rural/urbana (spec §2.3)
@@ -55,6 +56,7 @@ int main(int argc, char** argv) {
     if (const char* v = arg(argc, argv, "--sigma", nullptr))         par.sigma_ingreso = std::atof(v);
     if (const char* v = arg(argc, argv, "--base-pc", nullptr))       par.ingreso_no_laboral_pc = std::atof(v);
     if (const char* v = arg(argc, argv, "--empleos-frac", nullptr))  par.empleos_objetivo_frac = std::atof(v);
+    if (const char* v = arg(argc, argv, "--elast-pib", nullptr))      par.elasticidad_productividad = std::atof(v);
     // empresas: puestos ≈ frac · población en edad de trabajar (15-65)
     std::int64_t pet = 0;
     for (std::int64_t i = 0; i < p.size(); ++i) if (p.edad[i] >= 15 && p.edad[i] <= 65) ++pet;

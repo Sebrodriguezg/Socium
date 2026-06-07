@@ -215,7 +215,11 @@ void Engine::mercado_laboral() {
         std::normal_distribution<double> ruido(0.0, par_.sigma_ingreso);   // residual de Mincer (Gini)
         double ln = par_.retorno_anual_escolaridad * (anios - 11) + 0.03 * exper
                   - 0.0004 * exper * exper + ruido(thread_rng());
-        double ingreso = par_.smlv * par_.calib_ingreso * pol_.smlv_mult * productividad_ * std::exp(ln);
+        // productividad regional: ingreso escalado por el PIB pc del departamento (spec §5.2)
+        const std::uint8_t dep = p_.departamento_id[i];
+        double prod_dep = (dep < g_.dpto_productividad.size()) ? g_.dpto_productividad[dep] : 1.0;
+        double f_dep = std::pow(std::max(0.1, prod_dep), par_.elasticidad_productividad);
+        double ingreso = par_.smlv * par_.calib_ingreso * pol_.smlv_mult * productividad_ * f_dep * std::exp(ln);
         // informalidad (M3): por urbano/rural real del municipio (spec §2.4:
         // urbano 43%, rural 84.7%) modulada por educación
         const std::uint16_t mi = p_.municipio_id[i];
