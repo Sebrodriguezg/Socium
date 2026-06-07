@@ -65,6 +65,9 @@ Engine::Engine(Population& p, Households& h, const Geography& g, Parametros par,
             if (p_.afiliacion_salud[i] == AfiliacionSalud::Ninguno && uniform01() < pol_.aseguramiento_boost)
                 p_.afiliacion_salud[i] = AfiliacionSalud::Subsidiado;
     }
+    std::int32_t mh = 0;
+    for (std::int64_t i = 0; i < p_.size(); ++i) mh = std::max(mh, p_.hogar_id[i] + 1);
+    next_hogar_id_ = mh;
     recomputar_ingreso_hogar();
 }
 
@@ -253,6 +256,44 @@ void Engine::delincuencia() {
     }
 }
 
+// M-migración interna por gravedad (spec §6.3): los agentes huyen del conflicto del
+// origen hacia destinos grandes y seguros. Destino ~ pop^alpha · (1 - conflicto).
+void Engine::migracion() {
+    migraciones_anio_ = 0;
+    const std::int64_t M = g_.n_municipios();
+    if (M == 0 || static_cast<std::int64_t>(g_.mpio_peso.size()) != M) return;
+
+    std::vector<double> cum(static_cast<std::size_t>(M));
+    double acc = 0.0;
+    for (std::int64_t m = 0; m < M; ++m) {
+        const double pop = g_.mpio_peso[m];
+        const double conf = (m < static_cast<std::int64_t>(g_.mpio_conflicto.size())) ? g_.mpio_conflicto[m] : 0.0;
+        acc += std::pow(std::max(pop, 1.0), par_.gravity_alpha) * (1.0 - 0.7 * conf);
+        cum[m] = acc;
+    }
+    if (acc <= 0.0) return;
+
+    auto& rng = thread_rng();
+    std::uniform_real_distribution<double> U(0.0, 1.0);
+    const std::int64_t N = p_.size();
+    for (std::int64_t i = 0; i < N; ++i) {
+        if (!p_.vivo[i]) continue;
+        const std::uint16_t orig = p_.municipio_id[i];
+        const double conf = (orig < g_.mpio_conflicto.size()) ? g_.mpio_conflicto[orig] : 0.0;
+        double pmig = par_.migracion_base * (1.0 + par_.push_conflicto * conf);
+        if (p_.situacion_laboral[i] == SituacionLaboral::Desocupado) pmig *= 1.5;
+        if (U(rng) >= pmig) continue;
+
+        std::int64_t j = std::lower_bound(cum.begin(), cum.end(), U(rng) * acc) - cum.begin();
+        if (j >= M) j = M - 1;
+        if (static_cast<std::uint16_t>(j) == orig) continue;       // no migra al mismo sitio
+        p_.municipio_id[i]    = static_cast<std::uint16_t>(j);
+        p_.departamento_id[i] = g_.mpio_dpto[static_cast<std::size_t>(j)];
+        p_.hogar_id[i]        = next_hogar_id_++;                   // nuevo hogar en destino
+        ++migraciones_anio_;
+    }
+}
+
 void Engine::economia_mensual() {
     EconomyParams ep;
     ep.rule = cfg_.regla_economia;
@@ -316,6 +357,7 @@ MetricasAnuales Engine::medir(int anio) {
     if (pib_base_ <= 0.0) pib_base_ = static_cast<double>(tot) > 0 ? static_cast<double>(tot) : 1.0;
     m.pib_index = static_cast<double>(tot) / pib_base_;
     m.crecimiento = crecimiento_;
+    m.tasa_migracion = vivos ? static_cast<Real>(migraciones_anio_) / vivos : 0;
     return m;
 }
 
@@ -323,13 +365,14 @@ static void escribir_fila(std::ostream& os, const MetricasAnuales& m) {
     os << m.anio << "," << m.poblacion << "," << m.edad_media << "," << m.desempleo << ","
        << m.informalidad << "," << m.gini_ingreso << "," << m.pobreza << ","
        << m.tasa_desercion << "," << m.prev_enfermedad << "," << m.tasa_delincuencia << ","
-       << m.cobertura_educativa << "," << m.pib_index << "," << m.crecimiento << "\n";
+       << m.cobertura_educativa << "," << m.pib_index << "," << m.crecimiento << ","
+       << m.tasa_migracion << "\n";
 }
 
 void Engine::run(std::ostream& csv) {
     csv << "anio,poblacion,edad_media,desempleo,informalidad,gini_ingreso,pobreza,"
            "tasa_desercion,prev_enfermedad,tasa_delincuencia,cobertura_educativa,"
-           "pib_index,crecimiento\n";
+           "pib_index,crecimiento,tasa_migracion\n";
 
     // estado inicial (año base): fijar empleo/ingreso primero
     mercado_laboral();
@@ -343,6 +386,8 @@ void Engine::run(std::ostream& csv) {
         mercado_laboral();       // M2/M3
         recomputar_ingreso_hogar();
         delincuencia();          // M5
+        migracion();             // M-migración (§6.3)
+        recomputar_ingreso_hogar();   // hogares cambiaron por migración
         for (int paso = 0; paso < cfg_.pasos_por_anio; ++paso) {
             salud_mensual();     // M4
             economia_mensual();  // KWEM

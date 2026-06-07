@@ -55,6 +55,11 @@ struct Parametros {
     Real productividad_anual = 0.015;        // crecimiento real de productividad (PIB/ocupado)
     Real sensibilidad_ciclo = 0.5;           // cuánto realimenta el crecimiento al empleo
 
+    // --- M-migración interna por gravedad (spec §6.3) ---
+    Real migracion_base = 0.012;             // prob anual base de migrar (económica voluntaria)
+    Real push_conflicto = 4.0;               // el conflicto del origen empuja (desplazamiento forzado)
+    Real gravity_alpha = 0.85;               // exponente de masa poblacional del destino
+
     // --- líneas de referencia ---
     Real linea_pobreza_mensual = 435'000.0;  // línea de pobreza monetaria per cápita (DANE 2023)
 };
