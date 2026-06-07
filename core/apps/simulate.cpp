@@ -29,7 +29,10 @@ static const char* arg(int argc, char** argv, const char* k, const char* d) {
 int main(int argc, char** argv) {
     EngineConfig cfg;
     const std::int64_t n = std::atoll(arg(argc, argv, "--n", "5000000"));
+    cfg.anio_inicial    = std::atoi(arg(argc, argv, "--anio-inicial", "2026"));
     cfg.horizonte_anios = std::atoi(arg(argc, argv, "--years", "4"));
+    cfg.shock_anio      = std::atoi(arg(argc, argv, "--shock-anio", "0"));
+    cfg.shock_mag       = std::atof(arg(argc, argv, "--shock-mag", "0"));
     cfg.pasos_por_anio  = std::atoi(arg(argc, argv, "--pasos", "12"));
     cfg.seed            = std::strtoull(arg(argc, argv, "--seed", "42"), nullptr, 10);
     cfg.regla_economia  = rule_from_string(arg(argc, argv, "--rule", "saving"));

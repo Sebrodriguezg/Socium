@@ -24,6 +24,8 @@ struct EngineConfig {
     Rule regla_economia = Rule::SavingPropensity;
     Real lambda         = 0.5;
     bool economia_local = true;       // KWEM por municipio
+    int  shock_anio     = 0;          // año de shock exógeno (0 = ninguno; p.ej. 2020 COVID)
+    Real shock_mag      = 0.0;        // magnitud del shock al empleo ese año (0-1)
 };
 
 // Palancas de política que modifican los mecanismos (neutral = baseline).
@@ -95,6 +97,7 @@ private:
     double productividad_ = 1.0; // factor acumulado de productividad (crece ingresos)
     double crecimiento_ = 0.0;   // último crecimiento del PIB
     double pib_base_ = 0.0;      // PIB del año base (para índice)
+    double shock_actual_ = 1.0;  // factor de shock exógeno del año en curso (1 = sin shock)
     double deuda_ = 0.0;         // stock de deuda pública (unidades de PIB-proxy)
     double recaudo_pib_ = 0.0, deficit_pib_ = 0.0, deuda_pib_ = 0.0;  // últimos ratios fiscales
     std::ostream* perfiles_ = nullptr;  // salida opcional de perfiles por año

@@ -180,7 +180,9 @@ void Engine::mercado_laboral() {
     for (std::int64_t k = 0; k < f_.size(); ++k)
         if (f_.activa[k]) slots[f_.departamento[k]] += f_.empleos[k];
     // ciclo económico + política de empleo/formalización (palanca = demanda de trabajo)
-    for (std::int64_t d = 0; d < D; ++d) slots[d] *= ciclo_ * pol_.empleo_mult;
+    // shock exógeno: golpea el empleo de forma moderada (la mayor parte va vía ingreso)
+    const double shock_empleo = 1.0 - 0.35 * (1.0 - shock_actual_);
+    for (std::int64_t d = 0; d < D; ++d) slots[d] *= ciclo_ * pol_.empleo_mult * shock_empleo;
 
     // 2) participantes esperados por departamento (suma de probabilidades de participación)
     std::vector<double> exppart(static_cast<std::size_t>(D), 0.0);
@@ -221,7 +223,7 @@ void Engine::mercado_laboral() {
         const std::uint8_t dep = p_.departamento_id[i];
         double prod_dep = (dep < g_.dpto_productividad.size()) ? g_.dpto_productividad[dep] : 1.0;
         double f_dep = std::pow(std::max(0.1, prod_dep), par_.elasticidad_productividad);
-        double ingreso = par_.smlv * par_.calib_ingreso * pol_.smlv_mult * productividad_ * f_dep * std::exp(ln);
+        double ingreso = par_.smlv * par_.calib_ingreso * pol_.smlv_mult * productividad_ * f_dep * shock_actual_ * std::exp(ln);
         // informalidad (M3): por urbano/rural real del municipio (spec §2.4:
         // urbano 43%, rural 84.7%) modulada por educación
         const std::uint16_t mi = p_.municipio_id[i];
@@ -612,6 +614,8 @@ void Engine::run(std::ostream& csv) {
     if (perfiles_) escribir_perfiles(cfg_.anio_inicial, true);
 
     for (int a = 1; a <= cfg_.horizonte_anios; ++a) {
+        // shock exógeno (p.ej. COVID-2020): colapso transitorio del empleo ese año
+        shock_actual_ = (cfg_.anio_inicial + a == cfg_.shock_anio) ? (1.0 - cfg_.shock_mag) : 1.0;
         demografia();            // M7
         educacion();             // M1
         dinamica_empresas();     // §3: extorsión/quiebra/entrada (fija la capacidad de empleo)
