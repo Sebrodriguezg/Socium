@@ -31,7 +31,7 @@ int main(int argc, char** argv) {
 #endif
 
     Geography g = Geography::load_csv(arg(argc, argv, "--geo", "data/reference/divipola.csv"));
-    g.cargar_pesos(arg(argc, argv, "--pob", "data/reference/municipios.csv"));
+    g.cargar_pesos(arg(argc, argv, "--pob", "data/reference/poblacion_municipal.csv"));
 
     Population p = build_synthetic(n, seed);
     asignar_municipios(p, g, seed);

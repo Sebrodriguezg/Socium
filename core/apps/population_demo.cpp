@@ -50,7 +50,7 @@ int main(int argc, char** argv) {
 
     // Distribución espacial real (ponderada por población) si hay geografía.
     const char* geo_path = arg(argc, argv, "--geo", "data/reference/divipola.csv");
-    const char* pob_path = arg(argc, argv, "--pob", "data/reference/municipios.csv");
+    const char* pob_path = arg(argc, argv, "--pob", "data/reference/poblacion_municipal.csv");
     try {
         Geography g = Geography::load_csv(geo_path);
         const std::int64_t con_peso = g.cargar_pesos(pob_path);
