@@ -95,7 +95,8 @@ void Engine::recomputar_ingreso_hogar() {
     for (std::int64_t i = 0; i < N; ++i) {
         const std::int32_t hid = p_.hogar_id[i];
         float pc = cnt[hid] > 0 ? static_cast<float>(suma[hid] / cnt[hid]) : 0.0f;
-        hh_pc_[i] = pc + static_cast<float>(pol_.transfer_ingreso_pc);  // transferencias (política)
+        // piso no laboral del hogar (calibración GEIH) + transferencias (política)
+        hh_pc_[i] = pc + static_cast<float>(par_.ingreso_no_laboral_pc + pol_.transfer_ingreso_pc);
     }
 }
 
@@ -209,10 +210,10 @@ void Engine::mercado_laboral() {
         // sigma alto reproduce Gini ~0.5 y cola de Pareto, spec §1.4/§7.3)
         p_.situacion_laboral[i] = SituacionLaboral::Ocupado;
         const int exper = std::max(0, edad - anios - 6);
-        std::normal_distribution<double> ruido(0.0, 0.80);   // residual de Mincer
+        std::normal_distribution<double> ruido(0.0, par_.sigma_ingreso);   // residual de Mincer (Gini)
         double ln = par_.retorno_anual_escolaridad * (anios - 11) + 0.03 * exper
                   - 0.0004 * exper * exper + ruido(thread_rng());
-        double ingreso = par_.smlv * pol_.smlv_mult * productividad_ * std::exp(ln);
+        double ingreso = par_.smlv * par_.calib_ingreso * pol_.smlv_mult * productividad_ * std::exp(ln);
         // informalidad (M3): por urbano/rural real del municipio (spec §2.4:
         // urbano 43%, rural 84.7%) modulada por educación
         const std::uint16_t mi = p_.municipio_id[i];
@@ -432,21 +433,23 @@ MetricasAnuales Engine::medir(int anio) {
     const std::int64_t N = p_.size();
     MetricasAnuales m; m.anio = anio;
     std::int64_t vivos = 0, ocup = 0, desoc = 0, inf = 0, enfermos = 0, delinc = 0,
-                 escolar = 0, asisten = 0, pobres = 0;
+                 escolar = 0, asisten = 0, pobres = 0, pobres_ext = 0;
     long double suma_edad = 0, suma_sat = 0, suma_op = 0, suma_op2 = 0;
-    std::vector<float> ingresos;
+    std::vector<float> pcvec;   // ingreso per cápita del hogar (para Gini y pobreza, como DANE)
     for (std::int64_t i = 0; i < N; ++i) {
         if (!p_.vivo[i]) continue;
         ++vivos; suma_edad += p_.edad[i];
         suma_sat += p_.satisfaccion_vida[i];
         suma_op += p_.opinion_politica[i];
         suma_op2 += static_cast<long double>(p_.opinion_politica[i]) * p_.opinion_politica[i];
-        if (p_.situacion_laboral[i] == SituacionLaboral::Ocupado)   { ++ocup; ingresos.push_back(p_.ingreso_laboral[i]); inf += p_.informal[i]; }
+        if (p_.situacion_laboral[i] == SituacionLaboral::Ocupado)   { ++ocup; inf += p_.informal[i]; }
         if (p_.situacion_laboral[i] == SituacionLaboral::Desocupado) ++desoc;
         if (p_.meses_enfermo[i] > 0) ++enfermos;
         if (p_.es_delincuente[i]) ++delinc;
         if (p_.edad[i] >= 5 && p_.edad[i] <= 17) { ++escolar; if (p_.asiste_escuela[i]) ++asisten; }
+        pcvec.push_back(hh_pc_[i]);
         if (hh_pc_[i] < static_cast<float>(par_.linea_pobreza_mensual)) ++pobres;
+        if (hh_pc_[i] < static_cast<float>(par_.linea_pobreza_extrema)) ++pobres_ext;
     }
     m.poblacion = vivos;
     m.edad_media = vivos ? static_cast<Real>(suma_edad / vivos) : 0;
@@ -457,11 +460,12 @@ MetricasAnuales Engine::medir(int anio) {
     m.cobertura_educativa = escolar ? static_cast<Real>(asisten) / escolar : 0;
     m.tasa_desercion = escolar ? 1.0 - m.cobertura_educativa : 0;
     m.pobreza = vivos ? static_cast<Real>(pobres) / vivos : 0;
-    // gini ingreso
-    std::sort(ingresos.begin(), ingresos.end());
-    const std::int64_t n = static_cast<std::int64_t>(ingresos.size());
+    m.pobreza_extrema = vivos ? static_cast<Real>(pobres_ext) / vivos : 0;
+    // Gini del ingreso per cápita del hogar (definición DANE)
+    std::sort(pcvec.begin(), pcvec.end());
+    const std::int64_t n = static_cast<std::int64_t>(pcvec.size());
     long double w = 0, tot = 0;
-    for (std::int64_t i = 0; i < n; ++i) { w += static_cast<long double>(i + 1) * ingresos[i]; tot += ingresos[i]; }
+    for (std::int64_t i = 0; i < n; ++i) { w += static_cast<long double>(i + 1) * pcvec[i]; tot += pcvec[i]; }
     m.gini_ingreso = tot > 0 ? static_cast<Real>((2.0L * w) / (n * tot) - static_cast<long double>(n + 1) / n) : 0;
     if (pib_base_ <= 0.0) pib_base_ = static_cast<double>(tot) > 0 ? static_cast<double>(tot) : 1.0;
     m.pib_index = static_cast<double>(tot) / pib_base_;
@@ -477,14 +481,14 @@ MetricasAnuales Engine::medir(int anio) {
 
 static void escribir_fila(std::ostream& os, const MetricasAnuales& m) {
     os << m.anio << "," << m.poblacion << "," << m.edad_media << "," << m.desempleo << ","
-       << m.informalidad << "," << m.gini_ingreso << "," << m.pobreza << ","
+       << m.informalidad << "," << m.gini_ingreso << "," << m.pobreza << "," << m.pobreza_extrema << ","
        << m.tasa_desercion << "," << m.prev_enfermedad << "," << m.tasa_delincuencia << ","
        << m.cobertura_educativa << "," << m.pib_index << "," << m.crecimiento << ","
        << m.tasa_migracion << "," << m.satisfaccion_media << "," << m.polarizacion << "\n";
 }
 
 void Engine::run(std::ostream& csv) {
-    csv << "anio,poblacion,edad_media,desempleo,informalidad,gini_ingreso,pobreza,"
+    csv << "anio,poblacion,edad_media,desempleo,informalidad,gini_ingreso,pobreza,pobreza_extrema,"
            "tasa_desercion,prev_enfermedad,tasa_delincuencia,cobertura_educativa,"
            "pib_index,crecimiento,tasa_migracion,satisfaccion_media,polarizacion\n";
 

@@ -49,6 +49,10 @@ int main(int argc, char** argv) {
     Households h = form_households(p, g, cfg.seed);
 
     Parametros par;  // valores con fuente (data/reference/parametros.yaml)
+    // overrides de calibración (si se pasan; si no, usan los defaults calibrados de Parametros)
+    if (const char* v = arg(argc, argv, "--calib-ingreso", nullptr)) par.calib_ingreso = std::atof(v);
+    if (const char* v = arg(argc, argv, "--sigma", nullptr))         par.sigma_ingreso = std::atof(v);
+    if (const char* v = arg(argc, argv, "--base-pc", nullptr))       par.ingreso_no_laboral_pc = std::atof(v);
     // empresas: puestos ≈ frac · población en edad de trabajar (15-65)
     std::int64_t pet = 0;
     for (std::int64_t i = 0; i < p.size(); ++i) if (p.edad[i] >= 15 && p.edad[i] <= 65) ++pet;

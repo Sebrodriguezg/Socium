@@ -6,6 +6,25 @@ meta:
   fecha_base: "2026-06-06"
   nota: "Valores iniciales; se refinan con microdatos. Lo marcado supuesto se calibra a macro."
 
+# ---------- CALIBRACIÓN GEIH/DANE 2023 (distribución de ingreso) ----------
+# Calibrado para reproducir las cifras oficiales de pobreza monetaria y desigualdad.
+calibracion_ingreso:
+  objetivos_dane_2023:
+    pobreza_monetaria: 0.330        # línea 435.375 COP/mes per cápita
+    pobreza_extrema: 0.114          # línea 199.828 COP/mes
+    gini_per_capita: 0.553
+    fuente: "DANE, Pobreza monetaria 2023 (bol-PM-2023)"
+  parametros_calibrados:
+    calib_ingreso: 1.8              # escala de recursos del hogar (perceptores sub-contados + otros)
+    sigma_ingreso: 0.95             # dispersión lognormal del residual de Mincer
+    ingreso_no_laboral_pc: 140000   # piso per cápita (transferencias/remesas/rentas/en especie)
+  resultado_modelo:
+    pobreza: 0.324
+    pobreza_extrema: 0.106
+    gini: 0.547
+  nota: "calib_ingreso>1 porque la formación de hogares sub-cuenta perceptores; el ingreso
+         laboral individual queda escalado en consecuencia (la distribución per cápita es la calibrada)."
+
 # ---------- M1: deserción educativa ----------
 educacion_desercion:
   # deserción en educación superior por estrato (LEE, Javeriana, 2021-2)

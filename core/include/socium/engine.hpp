@@ -46,7 +46,7 @@ struct MetricasAnuales {
     int anio = 0;
     std::int64_t poblacion = 0;
     Real edad_media = 0, desempleo = 0, informalidad = 0, gini_ingreso = 0,
-         pobreza = 0, tasa_desercion = 0, prev_enfermedad = 0,
+         pobreza = 0, pobreza_extrema = 0, tasa_desercion = 0, prev_enfermedad = 0,
          tasa_delincuencia = 0, cobertura_educativa = 0,
          pib_index = 0, crecimiento = 0, tasa_migracion = 0,
          satisfaccion_media = 0, polarizacion = 0;

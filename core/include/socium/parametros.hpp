@@ -17,6 +17,9 @@ struct Parametros {
     Real penalizacion_informalidad = 0.30;  // supuesto, calibrar GEIH
     Real brecha_genero = 0.12;               // supuesto, calibrar GEIH
     Real smlv = 1'423'500.0;                 // salario mínimo 2025 (COP/mes), referencia
+    Real sigma_ingreso = 0.95;               // dispersión lognormal — calibrado a Gini DANE 0.553
+    Real calib_ingreso = 1.8;                // escala de recursos del hogar (perceptores por hogar
+                                             // sub-contados + otros ingresos) — calibrado a pobreza GEIH
 
     // --- M3 mercado laboral ---
     Real desempleo_objetivo = 0.10;    // GEIH
@@ -48,8 +51,9 @@ struct Parametros {
     // --- ingresos no laborales del hogar (para pobreza realista, M3/§2.4) ---
     Real pension_contributiva = 1'100'000.0; // jubilados con historia formal (COP/mes)
     Real colombia_mayor = 80'000.0;          // subsidio a adultos mayores vulnerables
-    Real subsistencia_informal = 380'000.0;  // rebusque + otros ing. no laborales (remesas/rentas/ayudas)
-    // NOTA: calibración fina de pobreza a 33% (DANE) requiere microdatos de ingreso GEIH
+    Real subsistencia_informal = 380'000.0;  // rebusque de no ocupados en edad laboral
+    Real ingreso_no_laboral_pc = 140'000.0;  // piso per cápita del hogar (transferencias/remesas/
+                                             // rentas/en especie) — calibrado a pobreza GEIH/DANE
 
     // --- cierre micro-macro (§8 paso 12, §11 Brecha 2) ---
     Real productividad_anual = 0.015;        // crecimiento real de productividad (PIB/ocupado)
@@ -71,8 +75,9 @@ struct Parametros {
     Real extorsion_tasa = 0.20;              // 'vacuna' como fracción del bruto en zona de conflicto
     Real prob_entrada_empresa = 0.12;        // reactivación/emprendimiento en buen ciclo
 
-    // --- líneas de referencia ---
-    Real linea_pobreza_mensual = 435'000.0;  // línea de pobreza monetaria per cápita (DANE 2023)
+    // --- líneas de referencia (DANE 2023) ---
+    Real linea_pobreza_mensual = 435'375.0;  // línea de pobreza monetaria per cápita
+    Real linea_pobreza_extrema = 199'828.0;  // línea de pobreza extrema per cápita
 };
 
 } // namespace socium
