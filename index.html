@@ -76,6 +76,7 @@
       combinación. Deja "Cualquiera" lo que no quieras fijar. Resultado: promedio 2030 de quienes coinciden.</p>
     <div class="form" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr))">
       <div><label>Edad</label><input type="number" id="aEdad" min="0" max="100" placeholder="cualquiera"></div>
+      <div><label>Sueldo mensual (COP)</label><input type="number" id="aSueldo" min="0" step="100000" placeholder="cualquiera"></div>
       <div><label>Sexo</label><select id="aSexo"><option value="">Cualquiera</option><option value="0">Hombre</option><option value="1">Mujer</option></select></div>
       <div><label>Departamento</label><select id="aDepto"><option value="">Cualquiera</option></select></div>
       <div><label>Educación</label><select id="aEduc"><option value="">Cualquiera</option><option value="0">Baja</option><option value="1">Media</option><option value="2">Alta</option></select></div>
@@ -92,6 +93,17 @@
       <thead><tr><th>Indicador (2030)</th><th class="sc-base">Continuidad</th><th class="sc-cepeda">Cepeda</th><th class="sc-dle">De la Espriella</th></tr></thead>
       <tbody id="aTbody"></tbody>
     </table>
+  </div>
+
+  <div class="card">
+    <h3 style="margin:0 0 8px">Indicadores nacionales (macro)</h3>
+    <div class="yearbar" id="macroYears"></div>
+    <table>
+      <thead><tr><th>Indicador</th><th class="sc-base">Continuidad</th><th class="sc-cepeda">Cepeda</th><th class="sc-dle">De la Espriella</th></tr></thead>
+      <tbody id="macroBody"></tbody>
+    </table>
+    <div class="note">Estimaciones del modelo. Inflación y TRM (dólar) son aproximaciones de primer
+      orden ligadas al déficit fiscal y al diferencial de inflación; no son pronósticos.</div>
   </div>
 
   <div class="card">
@@ -116,6 +128,16 @@
     <div id="leyenda" style="font-size:12px;color:#556;text-align:center"></div>
     <div id="mapaTip" style="text-align:center;font-size:14px;font-weight:bold;height:20px;color:#234"></div>
   </div>
+
+  <div class="card" style="text-align:center">
+    <h3 style="margin:0 0 8px">¿Qué le falta al modelo? Cuéntanos</h3>
+    <p style="font-size:13px;color:#667;margin:0 0 12px">El modelo no contempla todo. ¿Qué crees que falta
+      (conflicto armado, quién/dónde/cuándo iría a la guerra, otros factores)? Tus consideraciones nos ayudan a mejorarlo.</p>
+    <a id="formLink" href="#" target="_blank" rel="noopener"
+       style="display:inline-block;padding:12px 22px;background:#0F3460;color:#fff;border-radius:8px;text-decoration:none;font-weight:bold">
+       Enviar mis consideraciones</a>
+    <div style="font-size:11px;color:#999;margin-top:8px">(formulario por configurar)</div>
+  </div>
 </div>
 
 <script>
@@ -127,6 +149,29 @@ const MET=[ ["ingreso_pc","Ingreso por persona (COP/mes)", v=>"$"+Math.round(v).
   ["satisfaccion","Satisfacción con la vida (0–10)", v=>Number(v).toFixed(1), true] ];
 const ESC=["baseline","cepeda","de_la_espriella"];
 let DATA=null, anios=[], anioSel=null, cellActual=null;
+
+// promedia los arrays de métricas de varias celdas (para el fallback)
+function promediarCeldas(keys){
+  const out={};
+  for(const k of keys){ const c=DATA.datos[k];
+    for(const esc in c){ out[esc]=out[esc]||{};
+      for(const a in c[esc]){ out[esc][a]=out[esc][a]||{s:c[esc][a].map(()=>0),n:0};
+        c[esc][a].forEach((v,i)=>out[esc][a].s[i]+=v); out[esc][a].n++; } } }
+  const res={}; for(const esc in out){ res[esc]={};
+    for(const a in out[esc]) res[esc][a]=out[esc][a].s.map(v=>v/out[esc][a].n); }
+  return res;
+}
+// busca la celda; si no existe, relaja filtros (situación, luego educación, luego edad)
+function buscarCelda(parts){
+  const k=parts.join("|");
+  if(DATA.datos[k]) return {cell:DATA.datos[k], relax:0};
+  for(let keep=4; keep>=2; keep--){
+    const pref=parts.slice(0,keep).join("|")+"|";
+    const m=Object.keys(DATA.datos).filter(x=>x.startsWith(pref));
+    if(m.length) return {cell:promediarCeldas(m), relax:5-keep};
+  }
+  return null;
+}
 
 function edadBin(e){e=+e; if(e<15)return"0-14"; if(e<25)return"15-24"; if(e<35)return"25-34";
   if(e<45)return"35-44"; if(e<55)return"45-54"; if(e<65)return"55-64"; return"65+";}
@@ -141,13 +186,15 @@ async function init(){
 }
 function consultar(){
   const cod=document.getElementById("depto").value;
-  const key=[cod,document.getElementById("sexo").value,edadBin(document.getElementById("edad").value),
-             document.getElementById("educ").value,document.getElementById("situacion").value].join("|");
-  const cell=DATA.datos[key];
+  const parts=[cod,document.getElementById("sexo").value,edadBin(document.getElementById("edad").value),
+             document.getElementById("educ").value,document.getElementById("situacion").value];
   const msg=document.getElementById("msg");
-  if(!cell||!cell.baseline){msg.textContent="No hay suficientes datos para ese perfil (muestra pequeña). Prueba otra combinación.";
+  const r=buscarCelda(parts);
+  if(!r){msg.textContent="No hay datos para ese departamento. Prueba otro.";
     document.getElementById("resultado").style.display="none"; return;}
-  msg.textContent=""; cellActual=cell;
+  const relaxLbl=["","situación","situación y educación","situación, educación y edad"];
+  msg.textContent = r.relax ? `Perfil poco común: promedio de un grupo más amplio (sin filtrar ${relaxLbl[r.relax]}).` : "";
+  cellActual=r.cell;
   anios=Object.keys(cell.baseline).sort(); anioSel=anios[anios.length-1];
   const yb=document.getElementById("yearbar"); yb.innerHTML="";
   anios.forEach(a=>{const b=document.createElement("button");b.textContent=a;b.onclick=()=>{anioSel=a;render();};yb.appendChild(b);});
@@ -178,35 +225,42 @@ async function initMuestra(){
     const o=document.createElement("option"); o.value=parseInt(cod); o.textContent=nom; sel.appendChild(o);});
 }
 function consultarAvanzado(){
-  const edad=document.getElementById("aEdad").value;
-  const F={sexo:"aSexo",dpto:"aDepto",educ:"aEduc",situacion:"aSit",estrato:"aEstrato",
-           salud:"aSalud",etnia:"aEtnia",migrante:"aMig",urbano:"aUrb"};
-  const crit=[];
-  for(const campo in F){ const v=document.getElementById(F[campo]).value;
-    if(v!=="") crit.push([MIDX[campo], parseInt(v)]); }
-  const ed = edad!=="" ? parseInt(edad) : null;
-  const iE=MIDX["edad"], iIng=MIDX["ingreso_pc"];
-  const cols=[["pobre","prob. de ser pobre",100,"%"],["ocupado","prob. de estar ocupado",100,"%"],
-    ["enfermo","prob. de enfermar",100,"%"],["delito","prob. delincuencia",100,"%"],
-    ["estres","estrés financiero (deuda)",100,"%"]];
-  const msg=document.getElementById("aMsg"); let nmin=1e9;
-  const res={};
-  for(const esc of MUESTRA.escenarios){
-    const arr=MUESTRA.datos[esc]; let n=0, ing=0, acc={};
-    cols.forEach(c=>acc[c[0]]=0); let sat=0;
-    for(const row of arr){
-      if(ed!==null && Math.abs(row[iE]-ed)>7) continue;
-      let ok=true; for(const [idx,val] of crit){ if(row[idx]!==val){ok=false;break;} }
-      if(!ok) continue;
-      n++; ing+=row[iIng]; sat+=row[MIDX["satisfaccion"]];
-      cols.forEach(c=>acc[c[0]]+=row[MIDX[c[0]]]);
+  const iE=MIDX["edad"], iIng=MIDX["ingreso_pc"], iLab=MIDX["ingreso_lab"];
+  const cols=[["pobre","prob. de ser pobre"],["ocupado","prob. de estar ocupado"],
+    ["enfermo","prob. de enfermar"],["delito","prob. delincuencia"],
+    ["estres","estrés financiero (deuda)"]];
+  // construir filtros como predicados, en orden de prioridad (los últimos se descartan primero)
+  const filtros=[]; // {lab, test}
+  const cod=document.getElementById("aDepto").value;
+  if(cod!=="") filtros.push({lab:"departamento", test:r=>r[MIDX["dpto"]]===parseInt(cod)});
+  const ed=document.getElementById("aEdad").value;
+  if(ed!=="") filtros.push({lab:"edad", test:r=>Math.abs(r[iE]-parseInt(ed))<=7});
+  const su=document.getElementById("aSueldo").value;
+  if(su!=="") filtros.push({lab:"sueldo", test:r=>{const s=parseInt(su); return Math.abs(r[iLab]*1000-s)<=0.35*s;}});
+  const EQ={sexo:"aSexo",educ:"aEduc",situacion:"aSit",estrato:"aEstrato",salud:"aSalud",etnia:"aEtnia",migrante:"aMig",urbano:"aUrb"};
+  const ORD=["sexo","educ","situacion","estrato","salud","etnia","migrante","urbano"];
+  for(const campo of ORD){ const v=document.getElementById(EQ[campo]).value;
+    if(v!=="") filtros.push({lab:campo, test:r=>r[MIDX[campo]]===parseInt(v)}); }
+
+  function calcular(fs){
+    const res={}; let nmin=1e9;
+    for(const esc of MUESTRA.escenarios){
+      const arr=MUESTRA.datos[esc]; let n=0,ing=0,sat=0,acc={}; cols.forEach(c=>acc[c[0]]=0);
+      for(const row of arr){ let ok=true; for(const f of fs){ if(!f.test(row)){ok=false;break;} } if(!ok) continue;
+        n++; ing+=row[iIng]; sat+=row[MIDX["satisfaccion"]]; cols.forEach(c=>acc[c[0]]+=row[MIDX[c[0]]]); }
+      res[esc]={n, ing:n?ing/n*1000:0, sat:n?sat/n:0, acc:Object.fromEntries(cols.map(c=>[c[0],n?acc[c[0]]/n:0]))};
+      nmin=Math.min(nmin,n);
     }
-    res[esc]={n, ing:n?ing/n*1000:0, sat:n?sat/n:0, acc:Object.fromEntries(cols.map(c=>[c[0],n?acc[c[0]]/n:0]))};
-    nmin=Math.min(nmin,n);
+    return {res,nmin};
   }
-  if(nmin<10){ msg.textContent=`Muy pocos agentes coinciden (${nmin}). Quita algún filtro.`;
-    document.getElementById("aTabla").style.display="none"; return; }
-  msg.textContent=`Promedio de ${res.baseline.n} agentes con ese perfil (muestra).`;
+  // relajar (descartar el filtro de menor prioridad) hasta tener >=15 coincidencias
+  let fs=filtros.slice(), dropped=[], out=calcular(fs);
+  while(out.nmin<15 && fs.length>1){ dropped.push(fs.pop().lab); out=calcular(fs); }
+  const res=out.res;
+  const msg=document.getElementById("aMsg");
+  if(out.nmin<15 && fs.length<=1){ // ni con un solo filtro hay muestra (raro)
+    msg.textContent="No hay suficientes agentes ni relajando filtros; sube el nº de agentes (cluster)."; }
+  else msg.textContent=`Promedio de ${res.baseline.n} agentes`+(dropped.length?` (perfil poco común: se ignoró ${dropped.join(", ")}).`:` con ese perfil.`);
   const tb=document.getElementById("aTbody"); tb.innerHTML="";
   const ESC3=["baseline","cepeda","de_la_espriella"];
   function fila(lab,fn,mejorAlto){
@@ -289,9 +343,45 @@ async function initMapa(){
   renderMapa();
 }
 
+// ---------- PANEL MACRO (indicadores nacionales) ----------
+let SERIES=null, macroAnio=null;
+const MACRO=[ ["pib_index","PIB (índice, base=1)",v=>Number(v).toFixed(3),true],
+  ["crecimiento","Crecimiento del PIB",v=>(v*100).toFixed(1)+"%",true],
+  ["inflacion","Inflación",v=>(v*100).toFixed(1)+"%",false],
+  ["trm","Dólar (TRM, COP/USD)",v=>"$"+Math.round(v).toLocaleString("es-CO"),false],
+  ["deficit_pib","Déficit fiscal (% PIB)",v=>(v*100).toFixed(1)+"%",false],
+  ["deuda_pib","Deuda pública (% PIB)",v=>(v*100).toFixed(1)+"%",false],
+  ["pobreza","Pobreza nacional",v=>(v*100).toFixed(1)+"%",false],
+  ["gini_ingreso","Desigualdad (Gini)",v=>Number(v).toFixed(3),false],
+  ["desempleo","Desempleo",v=>(v*100).toFixed(1)+"%",false] ];
+async function initMacro(){
+  SERIES=await (await fetch("data/series.json")).json();
+  const ys=SERIES.baseline.map(r=>r.anio);
+  const yb=document.getElementById("macroYears"); yb.innerHTML="";
+  ys.forEach(a=>{const b=document.createElement("button");b.textContent=a;b.onclick=()=>{macroAnio=a;renderMacro();};yb.appendChild(b);});
+  macroAnio=ys[ys.length-1]; renderMacro();
+}
+function renderMacro(){
+  document.querySelectorAll("#macroYears button").forEach(b=>b.classList.toggle("on",b.textContent===macroAnio));
+  const E=["baseline","cepeda","de_la_espriella"];
+  const fila=E.map(e=>SERIES[e].find(r=>r.anio===macroAnio));
+  const tb=document.getElementById("macroBody"); tb.innerHTML="";
+  for(const [key,lab,fmt,alto] of MACRO){
+    const vals=fila.map(r=>parseFloat(r[key]));
+    const best=alto?Math.max(...vals):Math.min(...vals);
+    let h=`<td>${lab}</td>`; vals.forEach(v=>h+=`<td class="${v===best?'best':''}">${fmt(v)}</td>`);
+    const tr=document.createElement("tr"); tr.innerHTML=h; tb.appendChild(tr);
+  }
+}
+
+// ---------- Formulario de consideraciones ----------
+const FORM_URL="";  // <-- pega aquí el link del Google Form
+if(FORM_URL){ const a=document.getElementById("formLink"); a.href=FORM_URL; }
+
 init();
 initMapa();
 initMuestra();
+initMacro();
 </script>
 </body>
 </html>
