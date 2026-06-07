@@ -16,6 +16,7 @@ option(SOCIUM_NATIVE        "Optimizar para la CPU local (-march=native)" OFF)
 add_library(socium_core
   src/economy/economy.cpp
   src/agents/population.cpp
+  src/geo/geography.cpp
 )
 target_include_directories(socium_core PUBLIC include)
 target_compile_options(socium_core PRIVATE -O3 -Wall -Wextra)
@@ -43,6 +44,9 @@ target_link_libraries(socium_kwem PRIVATE socium_core)
 
 add_executable(socium_poblacion apps/population_demo.cpp)
 target_link_libraries(socium_poblacion PRIVATE socium_core)
+
+add_executable(socium_geo apps/geography_demo.cpp)
+target_link_libraries(socium_geo PRIVATE socium_core)
 
 enable_testing()
 # add_subdirectory(tests)
