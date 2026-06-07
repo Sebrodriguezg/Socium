@@ -39,6 +39,16 @@ def main():
         json.dumps({"metricas": MET, "escenarios": ESCENARIOS, "datos": perfiles},
                    ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
 
+    # --- series nacionales por escenario (panel macro) ---
+    series = {}
+    for esc in ESCENARIOS:
+        f = RUNS / f"serie_{esc}.csv"
+        if f.exists():
+            series[esc] = list(csv.DictReader(open(f)))
+    if series:
+        (WEBDATA / "series.json").write_text(json.dumps(series, separators=(",", ":")), encoding="utf-8")
+        print(f"OK -> web/data/series.json ({len(series)} escenarios)")
+
     deptos = {}
     for r in csv.DictReader(open(DIVIPOLA)):
         deptos[r["cod_dpto"]] = r["dpto"]
@@ -76,11 +86,11 @@ def main():
             f = RUNS / f"muestra_{esc}.csv"
             if not f.exists(): continue
             rd = csv.reader(open(f)); campos = next(rd)
-            ii = campos.index("ingreso_pc")
+            idxs = [campos.index(c) for c in ("ingreso_pc", "ingreso_lab")]
             filas = []
             for row in rd:
                 v = [int(x) for x in row]
-                v[ii] = v[ii] // 1000          # ingreso en miles de COP (compacto)
+                for ii in idxs: v[ii] = v[ii] // 1000   # ingresos en miles de COP (compacto)
                 filas.append(v)
             muestra[esc] = filas
         (WEBDATA / "muestra.json").write_text(

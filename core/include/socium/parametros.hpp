@@ -57,6 +57,12 @@ struct Parametros {
     Real ingreso_no_laboral_pc = 140'000.0;  // piso per cápita del hogar (transferencias/remesas/
                                              // rentas/en especie) — calibrado a pobreza GEIH/DANE
 
+    // --- macro nominal (inflación y tasa de cambio, estimaciones de 1er orden) ---
+    Real inflacion_base = 0.05;              // inflación base (~meta+desvío CO)
+    Real inflacion_externa = 0.02;           // inflación externa (EE.UU.) para la TRM
+    Real sens_inflacion_deficit = 0.6;       // déficit presiona inflación
+    Real trm_inicial = 4200.0;               // TRM base 2026 (COP/USD)
+
     // --- cierre micro-macro (§8 paso 12, §11 Brecha 2) ---
     Real productividad_anual = 0.015;        // crecimiento real de productividad (PIB/ocupado)
     Real sensibilidad_ciclo = 0.5;           // cuánto realimenta el crecimiento al empleo

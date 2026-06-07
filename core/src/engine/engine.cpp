@@ -538,6 +538,14 @@ void Engine::cerrar_macro() {
     const double exceso = std::max(0.0, deuda_pib_ - par_.umbral_deuda_pib);
     ciclo_ *= (1.0 - par_.penalidad_crecimiento_deuda * exceso);
 
+    // --- macro nominal: inflación (presión por déficit + demanda) y TRM ---
+    if (trm_ == 0.0) trm_ = par_.trm_inicial;          // año base
+    inflacion_ = par_.inflacion_base + par_.sens_inflacion_deficit * (deficit_pib_ - 0.03)
+               + 0.4 * crecimiento_;
+    inflacion_ = std::min(0.5, std::max(0.0, inflacion_));
+    if (prev_pib_ > 0.0)  // la TRM se deprecia con el diferencial de inflación (PPA/UIP)
+        trm_ *= (1.0 + inflacion_ - par_.inflacion_externa);
+
     prev_pib_ = static_cast<double>(pib);
     productividad_ *= (1.0 + par_.productividad_anual);  // crecimiento real de ingresos
 }
@@ -594,6 +602,7 @@ MetricasAnuales Engine::medir(int anio) {
     m.recaudo_pib = recaudo_pib_; m.deficit_pib = deficit_pib_; m.deuda_pib = deuda_pib_;
     m.deuda_informal = adultos ? static_cast<Real>(con_deuda) / adultos : 0;
     m.estres_financiero = adultos ? static_cast<Real>(estresados) / adultos : 0;
+    m.inflacion = inflacion_; m.trm = trm_;
     if (vivos) {
         m.satisfaccion_media = static_cast<Real>(suma_sat / vivos);
         const long double med = suma_op / vivos;
@@ -609,7 +618,8 @@ static void escribir_fila(std::ostream& os, const MetricasAnuales& m) {
        << m.cobertura_educativa << "," << m.pib_index << "," << m.crecimiento << ","
        << m.tasa_migracion << "," << m.satisfaccion_media << "," << m.polarizacion << ","
        << m.recaudo_pib << "," << m.deficit_pib << "," << m.deuda_pib << ","
-       << m.deuda_informal << "," << m.estres_financiero << "\n";
+       << m.deuda_informal << "," << m.estres_financiero << ","
+       << m.inflacion << "," << m.trm << "\n";
 }
 
 // Exporta métricas agregadas por departamento (estado actual del modelo).
@@ -750,7 +760,7 @@ void Engine::exportar_muestra(std::ostream& os, int paso) {
     if (paso < 1) paso = 1;
     const double linea = par_.linea_pobreza_mensual;
     os << "dpto,sexo,edad,educ,situacion,estrato,salud,hogar,etnia,migrante,urbano,"
-          "ingreso_pc,ocupado,pobre,enfermo,delito,satisfaccion,estres\n";
+          "ingreso_pc,ingreso_lab,ocupado,pobre,enfermo,delito,satisfaccion,estres\n";
     for (std::int64_t i = 0; i < p_.size(); i += paso) {
         if (!p_.vivo[i]) continue;
         const std::int32_t hid = p_.hogar_id[i];
@@ -763,7 +773,7 @@ void Engine::exportar_muestra(std::ostream& os, int paso) {
            << situacion_bin(p_, i) << ',' << estrato << ',' << static_cast<int>(p_.afiliacion_salud[i]) << ','
            << tam << ',' << static_cast<int>(p_.etnia[i]) << ','
            << (p_.estatus_migratorio[i] != EstatusMigratorio::Nacional ? 1 : 0) << ',' << urbano << ','
-           << static_cast<long long>(hh_pc_[i]) << ','
+           << static_cast<long long>(hh_pc_[i]) << ',' << static_cast<long long>(p_.ingreso_laboral[i]) << ','
            << (p_.situacion_laboral[i] == SituacionLaboral::Ocupado ? 1 : 0) << ','
            << (hh_pc_[i] < linea ? 1 : 0) << ',' << (p_.meses_enfermo[i] > 0 ? 1 : 0) << ','
            << static_cast<int>(p_.es_delincuente[i]) << ',' << static_cast<int>(p_.satisfaccion_vida[i]) << ','
@@ -775,7 +785,7 @@ void Engine::run(std::ostream& csv) {
     csv << "anio,poblacion,edad_media,desempleo,informalidad,gini_ingreso,pobreza,pobreza_extrema,"
            "tasa_desercion,prev_enfermedad,tasa_delincuencia,cobertura_educativa,"
            "pib_index,crecimiento,tasa_migracion,satisfaccion_media,polarizacion,"
-           "recaudo_pib,deficit_pib,deuda_pib,deuda_informal,estres_financiero\n";
+           "recaudo_pib,deficit_pib,deuda_pib,deuda_informal,estres_financiero,inflacion,trm\n";
 
     // estado inicial (año base): fijar empleo/ingreso primero
     mercado_laboral();
