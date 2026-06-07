@@ -30,7 +30,7 @@ def main():
         if not f.exists():
             raise SystemExit(f"Falta {f}. Corre socium_simular --out-perfiles primero.")
         for r in csv.DictReader(open(f)):
-            key = f"{r['cod_dpto']}|{r['sexo']}|{r['edad']}|{r['educacion']}"
+            key = f"{r['cod_dpto']}|{r['sexo']}|{r['edad']}|{r['educacion']}|{r['situacion']}"
             d = perfiles.setdefault(key, {})
             de = d.setdefault(esc, {})
             de[r["anio"]] = [round(float(r[m]), 4) for m in MET]

@@ -656,21 +656,39 @@ static int educ_bin(NivelEducativo n) {
 static const char* educ_label(int b) {
     static const char* L[3] = {"bajo","medio","alto"}; return L[b];
 }
+// situación laboral detallada (captura público/privado/formal/informal/pensionado)
+static int situacion_bin(const Population& p, std::int64_t i) {
+    if (p.edad[i] < 15) return 0;                 // menor
+    if (p.asiste_escuela[i]) return 1;            // estudiante
+    if (p.situacion_laboral[i] == SituacionLaboral::Ocupado) {
+        if (p.sector[i] == Sector::Gobierno) return 2;                       // empleado público
+        if (p.informal[i]) return 5;                                         // informal
+        if (p.posicion[i] == PosicionOcupacional::CuentaPropia) return 4;    // cuenta propia
+        return 3;                                                            // empleado formal privado
+    }
+    if (p.situacion_laboral[i] == SituacionLaboral::Desocupado) return 6;    // desempleado
+    return 7;                                                                // inactivo/pensionado
+}
+static const char* situacion_label(int b) {
+    static const char* L[8] = {"menor","estudiante","empleado_publico","empleado_formal",
+                               "cuenta_propia","informal","desempleado","inactivo"};
+    return L[b];
+}
 
 void Engine::escribir_perfiles(int anio, bool header) {
     std::ostream& os = *perfiles_;
     if (header)
-        os << "anio,cod_dpto,departamento,sexo,edad,educacion,n,ingreso_pc,"
+        os << "anio,cod_dpto,departamento,sexo,edad,educacion,situacion,n,ingreso_pc,"
               "p_ocupado,p_pobreza,p_enfermo,p_delincuencia,satisfaccion\n";
     const std::int64_t D = g_.n_departamentos();
-    const int NB = static_cast<int>(D) * 2 * 7 * 3;
-    auto idx = [](int d,int s,int e,int u){ return ((d*2+s)*7+e)*3+u; };
+    const int NB = static_cast<int>(D) * 2 * 7 * 3 * 8;
+    auto idx = [](int d,int s,int e,int u,int t){ return (((d*2+s)*7+e)*3+u)*8+t; };
     std::vector<std::int64_t> n(NB,0), ocup(NB,0), pobre(NB,0), enf(NB,0), del(NB,0);
     std::vector<double> pc(NB,0.0), sat(NB,0.0);
     for (std::int64_t i = 0; i < p_.size(); ++i) {
         if (!p_.vivo[i]) continue;
-        int c = idx(p_.departamento_id[i], static_cast<int>(p_.sexo[i]),
-                    edad_bin(p_.edad[i]), educ_bin(static_cast<NivelEducativo>(p_.nivel_educativo[i])));
+        int c = idx(p_.departamento_id[i], static_cast<int>(p_.sexo[i]), edad_bin(p_.edad[i]),
+                    educ_bin(static_cast<NivelEducativo>(p_.nivel_educativo[i])), situacion_bin(p_, i));
         ++n[c]; pc[c] += hh_pc_[i]; sat[c] += p_.satisfaccion_vida[i];
         ocup[c]  += (p_.situacion_laboral[i] == SituacionLaboral::Ocupado);
         pobre[c] += (hh_pc_[i] < static_cast<float>(par_.linea_pobreza_mensual));
@@ -680,16 +698,18 @@ void Engine::escribir_perfiles(int anio, bool header) {
     for (int d = 0; d < D; ++d)
       for (int s = 0; s < 2; ++s)
         for (int e = 0; e < 7; ++e)
-          for (int u = 0; u < 3; ++u) {
-            int c = idx(d,s,e,u);
-            if (n[c] < 20) continue;   // omite celdas con muestra muy chica
-            os << anio << "," << g_.dpto_codigo[d] << ",\"" << g_.dpto_nombre[d] << "\","
-               << (s==0?"Hombre":"Mujer") << "," << edad_label(e) << "," << educ_label(u) << ","
-               << n[c] << "," << static_cast<long long>(pc[c]/n[c]) << ","
-               << static_cast<double>(ocup[c])/n[c] << "," << static_cast<double>(pobre[c])/n[c] << ","
-               << static_cast<double>(enf[c])/n[c] << "," << static_cast<double>(del[c])/n[c] << ","
-               << sat[c]/n[c] << "\n";
-          }
+          for (int u = 0; u < 3; ++u)
+            for (int t = 0; t < 8; ++t) {
+              int c = idx(d,s,e,u,t);
+              if (n[c] < 20) continue;   // omite celdas con muestra muy chica
+              os << anio << "," << g_.dpto_codigo[d] << ",\"" << g_.dpto_nombre[d] << "\","
+                 << (s==0?"Hombre":"Mujer") << "," << edad_label(e) << "," << educ_label(u) << ","
+                 << situacion_label(t) << ","
+                 << n[c] << "," << static_cast<long long>(pc[c]/n[c]) << ","
+                 << static_cast<double>(ocup[c])/n[c] << "," << static_cast<double>(pobre[c])/n[c] << ","
+                 << static_cast<double>(enf[c])/n[c] << "," << static_cast<double>(del[c])/n[c] << ","
+                 << sat[c]/n[c] << "\n";
+            }
 }
 
 void Engine::run(std::ostream& csv) {

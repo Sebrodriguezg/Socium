@@ -44,6 +44,14 @@
         <option value="bajo">Baja (≤primaria)</option>
         <option value="medio">Media (secundaria/bachiller)</option>
         <option value="alto">Alta (técnica/universitaria)</option></select></div>
+      <div><label>Situación laboral</label><select id="situacion">
+        <option value="empleado_formal">Empleado formal (privado)</option>
+        <option value="empleado_publico">Empleado público</option>
+        <option value="cuenta_propia">Cuenta propia</option>
+        <option value="informal">Informal</option>
+        <option value="desempleado">Desempleado</option>
+        <option value="inactivo">Inactivo / pensionado</option>
+        <option value="estudiante">Estudiante</option></select></div>
       <button onclick="consultar()">Ver cómo sería mi vida</button>
     </div>
     <div id="msg"></div>
@@ -110,7 +118,7 @@ async function init(){
 function consultar(){
   const cod=document.getElementById("depto").value;
   const key=[cod,document.getElementById("sexo").value,edadBin(document.getElementById("edad").value),
-             document.getElementById("educ").value].join("|");
+             document.getElementById("educ").value,document.getElementById("situacion").value].join("|");
   const cell=DATA.datos[key];
   const msg=document.getElementById("msg");
   if(!cell||!cell.baseline){msg.textContent="No hay suficientes datos para ese perfil (muestra pequeña). Prueba otra combinación.";

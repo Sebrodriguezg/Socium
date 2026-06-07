@@ -66,6 +66,8 @@ def main():
     ap.add_argument("--sexo", required=True, help="H/M (Hombre/Mujer)")
     ap.add_argument("--depto", required=True, help="nombre del departamento")
     ap.add_argument("--educacion", required=True, help="bajo/medio/alto o años o nivel")
+    ap.add_argument("--situacion", default="empleado_formal",
+                    help="empleado_publico/empleado_formal/cuenta_propia/informal/desempleado/inactivo/estudiante")
     ap.add_argument("--anio", default=None)
     a = ap.parse_args()
 
@@ -75,7 +77,7 @@ def main():
     if not cod:
         raise SystemExit(f"Departamento no reconocido: {a.depto}")
 
-    print(f"\nPerfil: {a.edad} años, {sx}, {a.depto} (educación {ub})")
+    print(f"\nPerfil: {a.edad} años, {sx}, {a.depto} (educación {ub}, {a.situacion})")
     print("="*78)
 
     def fila(esc):
@@ -84,7 +86,7 @@ def main():
         if not f.exists(): return out
         for r in csv.DictReader(open(f)):
             if (r["cod_dpto"]==cod and r["sexo"]==sx and r["edad"]==eb and r["educacion"]==ub
-                    and (a.anio is None or r["anio"]==str(a.anio))):
+                    and r["situacion"]==a.situacion and (a.anio is None or r["anio"]==str(a.anio))):
                 out[r["anio"]] = r
         return out
 
