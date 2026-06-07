@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Socium · ¿Cómo sería tu vida? — Colombia 2026-2030</title>
+<style>
+  :root{ --base:#888; --cepeda:#E94560; --dle:#0F3460; --bg:#f4f7fb; --card:#fff; --ink:#1a1a2e; }
+  *{box-sizing:border-box} body{font-family:Arial,Helvetica,sans-serif;margin:0;background:var(--bg);color:var(--ink)}
+  header{background:linear-gradient(135deg,#16213e,#0f3460);color:#fff;padding:28px 20px;text-align:center}
+  header h1{margin:0 0 6px;font-size:26px} header p{margin:0;opacity:.85;font-size:14px}
+  .wrap{max-width:880px;margin:0 auto;padding:20px}
+  .card{background:var(--card);border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,.07);padding:20px;margin-bottom:20px}
+  .form{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;align-items:end}
+  label{display:block;font-size:13px;font-weight:bold;margin-bottom:5px;color:#445}
+  input,select{width:100%;padding:9px;border:1px solid #ccd;border-radius:8px;font-size:15px}
+  button{grid-column:1/-1;padding:12px;background:var(--cepeda);color:#fff;border:0;border-radius:8px;font-size:16px;font-weight:bold;cursor:pointer}
+  button:hover{opacity:.92}
+  table{width:100%;border-collapse:collapse;margin-top:8px}
+  th,td{padding:10px 8px;text-align:right;border-bottom:1px solid #eef}
+  th:first-child,td:first-child{text-align:left}
+  thead th{font-size:13px;border-bottom:2px solid #ddd}
+  .sc-base{color:var(--base)} .sc-cepeda{color:var(--cepeda)} .sc-dle{color:var(--dle)}
+  .best{font-weight:bold}
+  .note{font-size:12px;color:#778;margin-top:12px;line-height:1.5}
+  .yearbar{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 10px}
+  .yearbar button{grid-column:auto;width:auto;padding:6px 14px;background:#e7edf6;color:#345;font-weight:normal}
+  .yearbar button.on{background:var(--dle);color:#fff}
+  #msg{color:#a33;font-size:14px}
+</style>
+</head>
+<body>
+<header>
+  <h1>¿Cómo sería tu vida en Colombia?</h1>
+  <p>Simulador Socium · compara los gobiernos de Iván Cepeda y Abelardo de la Espriella (2026–2030)</p>
+</header>
+<div class="wrap">
+  <div class="card">
+    <div class="form">
+      <div><label>Edad</label><input type="number" id="edad" min="0" max="100" value="30"></div>
+      <div><label>Sexo</label><select id="sexo"><option value="Mujer">Mujer</option><option value="Hombre">Hombre</option></select></div>
+      <div><label>Departamento</label><select id="depto"></select></div>
+      <div><label>Educación</label><select id="educ">
+        <option value="bajo">Baja (≤primaria)</option>
+        <option value="medio">Media (secundaria/bachiller)</option>
+        <option value="alto">Alta (técnica/universitaria)</option></select></div>
+      <button onclick="consultar()">Ver cómo sería mi vida</button>
+    </div>
+    <div id="msg"></div>
+  </div>
+
+  <div class="card" id="resultado" style="display:none">
+    <div class="yearbar" id="yearbar"></div>
+    <table>
+      <thead><tr><th>Indicador</th>
+        <th class="sc-base">Continuidad</th><th class="sc-cepeda">Cepeda</th><th class="sc-dle">De la Espriella</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+    <div class="note">Promedios de personas con tu mismo perfil (departamento, sexo, grupo de edad y nivel
+      educativo). Modelo basado en agentes, calibrado a cifras oficiales de DANE 2023 (pobreza, Gini,
+      desempleo, informalidad). Las cifras son <b>escenarios de simulación</b> a partir de los programas de
+      gobierno publicados, no predicciones; tratamiento neutral y simétrico de ambos candidatos.</div>
+  </div>
+</div>
+
+<script>
+const MET=[ ["ingreso_pc","Ingreso por persona (COP/mes)", v=>"$"+Math.round(v).toLocaleString("es-CO"), true],
+  ["p_ocupado","Probabilidad de estar ocupado", v=>(v*100).toFixed(0)+"%", true],
+  ["p_pobreza","Probabilidad de ser pobre", v=>(v*100).toFixed(0)+"%", false],
+  ["p_enfermo","Probabilidad de enfermar", v=>(v*100).toFixed(0)+"%", false],
+  ["p_delincuencia","Delincuencia en tu entorno", v=>(v*100).toFixed(1)+"%", false],
+  ["satisfaccion","Satisfacción con la vida (0–10)", v=>Number(v).toFixed(1), true] ];
+const ESC=["baseline","cepeda","de_la_espriella"];
+let DATA=null, anios=[], anioSel=null, cellActual=null;
+
+function edadBin(e){e=+e; if(e<15)return"0-14"; if(e<25)return"15-24"; if(e<35)return"25-34";
+  if(e<45)return"35-44"; if(e<55)return"45-54"; if(e<65)return"55-64"; return"65+";}
+
+async function init(){
+  const deptos=await (await fetch("data/departamentos.json")).json();
+  const sel=document.getElementById("depto");
+  Object.entries(deptos).sort((a,b)=>a[1].localeCompare(b[1])).forEach(([cod,nom])=>{
+    const o=document.createElement("option"); o.value=cod; o.textContent=nom; sel.appendChild(o);});
+  sel.value="11001".slice(0,2); // Bogotá por defecto
+  DATA=await (await fetch("data/perfiles.json")).json();
+}
+function consultar(){
+  const cod=document.getElementById("depto").value;
+  const key=[cod,document.getElementById("sexo").value,edadBin(document.getElementById("edad").value),
+             document.getElementById("educ").value].join("|");
+  const cell=DATA.datos[key];
+  const msg=document.getElementById("msg");
+  if(!cell||!cell.baseline){msg.textContent="No hay suficientes datos para ese perfil (muestra pequeña). Prueba otra combinación.";
+    document.getElementById("resultado").style.display="none"; return;}
+  msg.textContent=""; cellActual=cell;
+  anios=Object.keys(cell.baseline).sort(); anioSel=anios[anios.length-1];
+  const yb=document.getElementById("yearbar"); yb.innerHTML="";
+  anios.forEach(a=>{const b=document.createElement("button");b.textContent=a;b.onclick=()=>{anioSel=a;render();};yb.appendChild(b);});
+  document.getElementById("resultado").style.display="block"; render();
+}
+function render(){
+  document.querySelectorAll("#yearbar button").forEach(b=>b.classList.toggle("on",b.textContent===anioSel));
+  const tb=document.getElementById("tbody"); tb.innerHTML="";
+  MET.forEach(([key,lab,fmt,mejorAlto],i)=>{
+    const vals=ESC.map(e=> cellActual[e] && cellActual[e][anioSel] ? cellActual[e][anioSel][i] : null);
+    const validos=vals.filter(v=>v!==null);
+    const best = validos.length? (mejorAlto?Math.max(...validos):Math.min(...validos)) : null;
+    const tr=document.createElement("tr");
+    let html=`<td>${lab}</td>`;
+    vals.forEach(v=>{ const isBest=(v!==null && v===best);
+      html+=`<td class="${isBest?'best':''}">${v===null?'–':fmt(v)}</td>`;});
+    tr.innerHTML=html; tb.appendChild(tr);
+  });
+}
+init();
+</script>
+</body>
+</html>
