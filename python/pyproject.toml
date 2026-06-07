@@ -1,0 +1,23 @@
+[project]
+name = "socium"
+version = "0.0.1"
+description = "Análisis, visualización y calibración para el simulador Socium"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy",
+    "pandas",
+    "matplotlib",
+    "scipy",
+    "h5py",
+    "networkx",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "ruff", "mypy", "jupyter"]
+
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]

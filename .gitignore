@@ -1,0 +1,51 @@
+# ---- C++ / build ----
+build/
+cmake-build-*/
+*.o
+*.obj
+*.so
+*.dylib
+*.a
+*.exe
+CMakeCache.txt
+CMakeFiles/
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.ipynb_checkpoints/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# ---- Simulación / salidas pesadas ----
+experiments/runs/*
+!experiments/runs/.gitkeep
+results/_scratch/
+*.h5
+*.hdf5
+*.parquet
+*.npy
+*.npz
+checkpoints/
+
+# ---- Datos (no versionar crudos pesados) ----
+data/raw/*
+!data/raw/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+data/external/*
+!data/external/.gitkeep
+
+# ---- HPC / clúster ----
+slurm-*.out
+*.log
+
+# ---- Sistema / editores ----
+.DS_Store
+.idea/
+.vscode/
+*.swp

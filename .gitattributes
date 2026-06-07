@@ -1,0 +1,13 @@
+# Git LFS: los PDFs de la bibliografía van por LFS para no inflar el repo.
+articles/pdfs/**/*.pdf filter=lfs diff=lfs merge=lfs -text
+articles/**/*.pdf       filter=lfs diff=lfs merge=lfs -text
+
+# Otros binarios grandes que podrían aparecer
+*.h5    filter=lfs diff=lfs merge=lfs -text
+*.hdf5  filter=lfs diff=lfs merge=lfs -text
+
+# Normalización de fin de línea
+*.cpp   text
+*.hpp   text
+*.py    text
+*.md    text
