@@ -47,7 +47,10 @@ int main(int argc, char** argv) {
     Households h = form_households(p, g, cfg.seed);
 
     Parametros par;  // valores con fuente (data/reference/parametros.yaml)
-    Engine eng(p, h, g, par, cfg);
+    Politicas pol;
+    const char* esc = arg(argc, argv, "--escenario", nullptr);
+    if (esc) { pol = Politicas::load(esc); std::cerr << "escenario: " << esc << "\n"; }
+    Engine eng(p, h, g, par, cfg, pol);
 
     const char* out = arg(argc, argv, "--out", nullptr);
     std::ofstream fout;

@@ -1,0 +1,9 @@
+# escenario cepeda -> knobs del motor (generado; ver docs/escenarios/traduccion.md)
+transfer_ingreso_pc 64800
+desercion_mult 0.708333
+salud_prob_mult 0.869565
+aseguramiento_boost 0.3
+crimen_base_mult 0.95
+crimen_abandono_mult 1.6
+smlv_mult 1.23
+empleo_mult 1.1

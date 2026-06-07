@@ -1,0 +1,9 @@
+# escenario de_la_espriella -> knobs del motor (generado; ver docs/escenarios/traduccion.md)
+transfer_ingreso_pc -14200
+desercion_mult 1
+salud_prob_mult 1.05
+aseguramiento_boost 0
+crimen_base_mult 0.75
+crimen_abandono_mult 0.9
+smlv_mult 1
+empleo_mult 1.15

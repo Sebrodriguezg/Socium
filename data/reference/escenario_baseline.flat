@@ -1,0 +1,9 @@
+# escenario baseline -> knobs del motor (generado; ver docs/escenarios/traduccion.md)
+transfer_ingreso_pc 0
+desercion_mult 1
+salud_prob_mult 1
+aseguramiento_boost 0
+crimen_base_mult 1
+crimen_abandono_mult 1
+smlv_mult 1
+empleo_mult 1
