@@ -77,6 +77,11 @@ struct Parametros {
     Real extorsion_tasa = 0.20;              // 'vacuna' como fracción del bruto en zona de conflicto
     Real prob_entrada_empresa = 0.12;        // reactivación/emprendimiento en buen ciclo
 
+    // --- sector financiero / crédito de hogares ---
+    Real tasa_credito_formal = 0.20;         // interés anual del crédito formal (bancos)
+    Real tasa_gota_gota = 2.0;               // interés anual del crédito informal ('gota a gota', ~200%)
+    Real umbral_estres_financiero = 1.0;     // deuda > umbral·ingreso anual = estrés financiero
+
     // --- cuentas fiscales (cierre stock-flow consistent) ---
     Real tasa_tributaria_pib = 0.195;        // recaudo / PIB (Colombia ~19.5%)
     Real gasto_social_base_pib = 0.20;       // gasto público base / PIB (baseline ~déficit 4% real CO)

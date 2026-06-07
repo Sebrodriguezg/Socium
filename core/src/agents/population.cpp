@@ -14,7 +14,7 @@ void Population::resize(std::int64_t n) {
     nivel_educativo.resize(N); anios_escolaridad.resize(N); asiste_escuela.resize(N);
     situacion_laboral.resize(N); sector.resize(N); posicion.resize(N);
     horas_trabajadas.resize(N); informal.resize(N); cotiza_pension.resize(N);
-    ingreso_laboral.resize(N); riqueza.resize(N); afiliacion_salud.resize(N);
+    ingreso_laboral.resize(N); riqueza.resize(N); deuda.resize(N); afiliacion_salud.resize(N);
     confianza.resize(N); participa_org.resize(N); religiosidad.resize(N);
     opinion_politica.resize(N); satisfaccion_vida.resize(N); estatus_migratorio.resize(N);
     vivo.resize(N); es_delincuente.resize(N); meses_enfermo.resize(N);
@@ -29,7 +29,7 @@ std::int64_t Population::nacer(Sexo s, std::int32_t hogar, std::uint16_t municip
     situacion_laboral.push_back(SituacionLaboral::MenorEdad); sector.push_back(Sector::NoAplica);
     posicion.push_back(PosicionOcupacional::NoAplica); horas_trabajadas.push_back(0);
     informal.push_back(0); cotiza_pension.push_back(0);
-    ingreso_laboral.push_back(0.0f); riqueza.push_back(0.0f);
+    ingreso_laboral.push_back(0.0f); riqueza.push_back(0.0f); deuda.push_back(0.0f);
     afiliacion_salud.push_back(AfiliacionSalud::Subsidiado);
     confianza.push_back(0); participa_org.push_back(0); religiosidad.push_back(Religiosidad::Catolica);
     opinion_politica.push_back(0); satisfaccion_vida.push_back(5);
@@ -122,7 +122,7 @@ Population build_synthetic(std::int64_t n, std::uint64_t seed) {
             p.horas_trabajadas[i] = 0; p.ingreso_laboral[i] = 0.0f;
         }
 
-        p.riqueza[i] = static_cast<float>(p.ingreso_laboral[i] * (6.0 + U(rng) * 24.0));
+        p.riqueza[i] = static_cast<float>(p.ingreso_laboral[i] * (6.0 + U(rng) * 24.0)); p.deuda[i] = 0.0f;
 
         // Salud: cobertura ~95% (contributivo vs subsidiado según informalidad).
         double salud = U(rng);

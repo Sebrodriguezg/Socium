@@ -345,6 +345,27 @@ void Engine::migracion() {
     }
 }
 
+// Sector financiero: crédito de hogares. Los hogares cortos de ingreso piden prestado
+// (informal 'gota a gota' al ~200% si son pobres/informales, formal si no); el excedente
+// repaga. La deuda alta = estrés financiero (trampa de deuda). No altera la pobreza
+// monetaria (def. DANE por ingreso); es una dimensión de vulnerabilidad aparte.
+void Engine::finanzas() {
+    const std::int64_t N = p_.size();
+    const double linea = par_.linea_pobreza_mensual;
+    #pragma omp parallel for schedule(static)
+    for (std::int64_t i = 0; i < N; ++i) {
+        if (!p_.vivo[i] || p_.edad[i] < 18) continue;
+        const double pc = hh_pc_[i];
+        const bool informal_credito = p_.informal[i] || pc < 1.5 * linea;
+        const double tasa = informal_credito ? par_.tasa_gota_gota : par_.tasa_credito_formal;
+        double d = p_.deuda[i] * (1.0 + tasa);                 // interés
+        if (pc < linea) d += (linea - pc) * 6.0;               // pide prestado para subsistir
+        else            d = std::max(0.0, d - (pc - linea) * 3.0);  // repaga con excedente
+        const double techo = std::max(linea, pc) * 12.0 * 3.0; // techo de endeudamiento
+        p_.deuda[i] = static_cast<float>(std::min(d, techo));
+    }
+}
+
 // M-opinión / bienestar subjetivo / radicalización (spec §6.6).
 // Actualiza la satisfacción con la vida (0-10) según condiciones reales del agente y
 // mueve la opinión política por conformidad con el municipio + estrés económico (que
@@ -378,6 +399,8 @@ void Engine::opinion() {
         double sat = 5.0;
         sat += (hh_pc_[i] >= linea) ? 1.5 : -2.5;
         if (p_.meses_enfermo[i] > 0) sat -= 1.5;
+        // estrés financiero (trampa de deuda) golpea el bienestar
+        if (p_.deuda[i] > par_.umbral_estres_financiero * std::max(hh_pc_[i], 1.0f) * 12.0f) sat -= 1.0;
         if (p_.situacion_laboral[i] == SituacionLaboral::Ocupado) sat += 1.0;
         else if (p_.situacion_laboral[i] == SituacionLaboral::Desocupado) sat -= 1.0;
         sat -= par_.peso_seguridad_bienestar * conf;
@@ -486,7 +509,8 @@ MetricasAnuales Engine::medir(int anio) {
     const std::int64_t N = p_.size();
     MetricasAnuales m; m.anio = anio;
     std::int64_t vivos = 0, ocup = 0, desoc = 0, inf = 0, enfermos = 0, delinc = 0,
-                 escolar = 0, asisten = 0, pobres = 0, pobres_ext = 0;
+                 escolar = 0, asisten = 0, pobres = 0, pobres_ext = 0,
+                 adultos = 0, con_deuda = 0, estresados = 0;
     long double suma_edad = 0, suma_sat = 0, suma_op = 0, suma_op2 = 0;
     std::vector<float> pcvec;   // ingreso per cápita del hogar (para Gini y pobreza, como DANE)
     for (std::int64_t i = 0; i < N; ++i) {
@@ -503,6 +527,11 @@ MetricasAnuales Engine::medir(int anio) {
         pcvec.push_back(hh_pc_[i]);
         if (hh_pc_[i] < static_cast<float>(par_.linea_pobreza_mensual)) ++pobres;
         if (hh_pc_[i] < static_cast<float>(par_.linea_pobreza_extrema)) ++pobres_ext;
+        if (p_.edad[i] >= 18) {
+            ++adultos;
+            if (p_.deuda[i] > 0.1 * par_.linea_pobreza_mensual) ++con_deuda;
+            if (p_.deuda[i] > par_.umbral_estres_financiero * std::max(hh_pc_[i], 1.0f) * 12.0f) ++estresados;
+        }
     }
     m.poblacion = vivos;
     m.edad_media = vivos ? static_cast<Real>(suma_edad / vivos) : 0;
@@ -525,6 +554,8 @@ MetricasAnuales Engine::medir(int anio) {
     m.crecimiento = crecimiento_;
     m.tasa_migracion = vivos ? static_cast<Real>(migraciones_anio_) / vivos : 0;
     m.recaudo_pib = recaudo_pib_; m.deficit_pib = deficit_pib_; m.deuda_pib = deuda_pib_;
+    m.deuda_informal = adultos ? static_cast<Real>(con_deuda) / adultos : 0;
+    m.estres_financiero = adultos ? static_cast<Real>(estresados) / adultos : 0;
     if (vivos) {
         m.satisfaccion_media = static_cast<Real>(suma_sat / vivos);
         const long double med = suma_op / vivos;
@@ -539,7 +570,8 @@ static void escribir_fila(std::ostream& os, const MetricasAnuales& m) {
        << m.tasa_desercion << "," << m.prev_enfermedad << "," << m.tasa_delincuencia << ","
        << m.cobertura_educativa << "," << m.pib_index << "," << m.crecimiento << ","
        << m.tasa_migracion << "," << m.satisfaccion_media << "," << m.polarizacion << ","
-       << m.recaudo_pib << "," << m.deficit_pib << "," << m.deuda_pib << "\n";
+       << m.recaudo_pib << "," << m.deficit_pib << "," << m.deuda_pib << ","
+       << m.deuda_informal << "," << m.estres_financiero << "\n";
 }
 
 // Exporta métricas agregadas por departamento (estado actual del modelo).
@@ -626,7 +658,7 @@ void Engine::run(std::ostream& csv) {
     csv << "anio,poblacion,edad_media,desempleo,informalidad,gini_ingreso,pobreza,pobreza_extrema,"
            "tasa_desercion,prev_enfermedad,tasa_delincuencia,cobertura_educativa,"
            "pib_index,crecimiento,tasa_migracion,satisfaccion_media,polarizacion,"
-           "recaudo_pib,deficit_pib,deuda_pib\n";
+           "recaudo_pib,deficit_pib,deuda_pib,deuda_informal,estres_financiero\n";
 
     // estado inicial (año base): fijar empleo/ingreso primero
     mercado_laboral();
@@ -646,6 +678,7 @@ void Engine::run(std::ostream& csv) {
         delincuencia();          // M5
         migracion();             // M-migración (§6.3)
         recomputar_ingreso_hogar();   // hogares cambiaron por migración
+        finanzas();              // crédito de hogares (gota a gota / formal)
         opinion();               // M-opinión/bienestar (§6.6)
         for (int paso = 0; paso < cfg_.pasos_por_anio; ++paso) {
             salud_mensual();     // M4

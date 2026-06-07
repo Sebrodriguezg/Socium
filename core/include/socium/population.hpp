@@ -54,6 +54,7 @@ struct Population {
     // económico (individual)
     std::vector<float>             ingreso_laboral;   // COP/mes
     std::vector<float>             riqueza;           // patrimonio (stock)
+    std::vector<float>             deuda;             // deuda del hogar (stock, COP)
     // salud
     std::vector<AfiliacionSalud>   afiliacion_salud;
     // social / político

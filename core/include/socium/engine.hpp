@@ -56,7 +56,8 @@ struct MetricasAnuales {
          tasa_delincuencia = 0, cobertura_educativa = 0,
          pib_index = 0, crecimiento = 0, tasa_migracion = 0,
          satisfaccion_media = 0, polarizacion = 0,
-         recaudo_pib = 0, deficit_pib = 0, deuda_pib = 0;
+         recaudo_pib = 0, deficit_pib = 0, deuda_pib = 0,
+         deuda_informal = 0, estres_financiero = 0;
 };
 
 class Engine {
@@ -80,6 +81,7 @@ private:
     void salud_mensual();       // M4 mensual
     void delincuencia();        // M5 anual
     void migracion();           // M-migración: gravedad, huye del conflicto (§6.3)
+    void finanzas();            // crédito de hogares: gota a gota / formal, estrés financiero
     void opinion();             // M-opinión/bienestar/radicalización (§6.6)
     void dinamica_empresas();   // §3: extorsión, quiebra y entrada de empresas
     void economia_mensual();    // economía (KWEM) mensual
