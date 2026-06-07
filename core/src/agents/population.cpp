@@ -17,7 +17,26 @@ void Population::resize(std::int64_t n) {
     ingreso_laboral.resize(N); riqueza.resize(N); afiliacion_salud.resize(N);
     confianza.resize(N); participa_org.resize(N); religiosidad.resize(N);
     opinion_politica.resize(N); satisfaccion_vida.resize(N); estatus_migratorio.resize(N);
+    vivo.resize(N); es_delincuente.resize(N); meses_enfermo.resize(N);
     hogar_id.resize(N); municipio_id.resize(N); departamento_id.resize(N);
+}
+
+std::int64_t Population::nacer(Sexo s, std::int32_t hogar, std::uint16_t municipio, std::uint8_t depto) {
+    edad.push_back(0); sexo.push_back(s); etnia.push_back(Etnia::Ninguna);
+    estado_civil.push_back(EstadoCivil::Soltero);
+    nivel_educativo.push_back(NivelEducativo::Ninguno); anios_escolaridad.push_back(0);
+    asiste_escuela.push_back(0);
+    situacion_laboral.push_back(SituacionLaboral::MenorEdad); sector.push_back(Sector::NoAplica);
+    posicion.push_back(PosicionOcupacional::NoAplica); horas_trabajadas.push_back(0);
+    informal.push_back(0); cotiza_pension.push_back(0);
+    ingreso_laboral.push_back(0.0f); riqueza.push_back(0.0f);
+    afiliacion_salud.push_back(AfiliacionSalud::Subsidiado);
+    confianza.push_back(0); participa_org.push_back(0); religiosidad.push_back(Religiosidad::Catolica);
+    opinion_politica.push_back(0); satisfaccion_vida.push_back(5);
+    estatus_migratorio.push_back(EstatusMigratorio::Nacional);
+    vivo.push_back(1); es_delincuente.push_back(0); meses_enfermo.push_back(0);
+    hogar_id.push_back(hogar); municipio_id.push_back(municipio); departamento_id.push_back(depto);
+    return size() - 1;
 }
 
 std::size_t Population::bytes_per_agent() {
@@ -126,6 +145,9 @@ Population build_synthetic(std::int64_t n, std::uint64_t seed) {
         p.estatus_migratorio[i] = mig < 0.05
             ? (U(rng) < 0.6 ? EstatusMigratorio::MigranteRegular : EstatusMigratorio::MigranteIrregular)
             : EstatusMigratorio::Nacional;
+
+        // estados dinámicos iniciales
+        p.vivo[i] = 1; p.es_delincuente[i] = 0; p.meses_enfermo[i] = 0;
 
         // Geografía (placeholder uniforme; se reemplaza por DIVIPOLA real).
         p.departamento_id[i] = static_cast<std::uint8_t>(U(rng) * 33);

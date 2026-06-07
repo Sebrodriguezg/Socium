@@ -19,6 +19,7 @@ add_library(socium_core
   src/agents/population.cpp
   src/agents/household.cpp
   src/geo/geography.cpp
+  src/engine/engine.cpp
 )
 target_include_directories(socium_core PUBLIC include)
 target_compile_options(socium_core PRIVATE -O3 -Wall -Wextra)
@@ -55,6 +56,9 @@ target_link_libraries(socium_hogares PRIVATE socium_core)
 
 add_executable(socium_sociedad apps/society_demo.cpp)
 target_link_libraries(socium_sociedad PRIVATE socium_core)
+
+add_executable(socium_simular apps/simulate.cpp)
+target_link_libraries(socium_simular PRIVATE socium_core)
 
 enable_testing()
 # add_subdirectory(tests)

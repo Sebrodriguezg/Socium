@@ -64,6 +64,10 @@ struct Population {
     std::vector<std::uint8_t>      satisfaccion_vida; // 0..10
     // migración
     std::vector<EstatusMigratorio> estatus_migratorio;
+    // estados dinámicos (motor de tiempo)
+    std::vector<std::uint8_t>      vivo;            // 1 vivo, 0 fallecido
+    std::vector<std::uint8_t>      es_delincuente;  // 0/1 (emerge por M5)
+    std::vector<std::uint8_t>      meses_enfermo;   // >0 si cursa enfermedad (M4)
     // enlaces estructurales
     std::vector<std::int32_t>      hogar_id;
     std::vector<std::uint16_t>     municipio_id;      // 0..1102 (DIVIPOLA reindexado)
@@ -71,6 +75,8 @@ struct Population {
 
     std::int64_t size() const { return static_cast<std::int64_t>(edad.size()); }
     void resize(std::int64_t n);
+    // Añade un recién nacido (edad 0) en un hogar/municipio dados. Devuelve su índice.
+    std::int64_t nacer(Sexo s, std::int32_t hogar, std::uint16_t municipio, std::uint8_t depto);
     // memoria aproximada por individuo (bytes), para planear corridas grandes.
     static std::size_t bytes_per_agent();
 };
