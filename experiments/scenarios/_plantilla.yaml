@@ -1,0 +1,52 @@
+# Plantilla de escenario — Socium · Colombia 2026-2030
+# Copiar a <id>.yaml y llenar. Valores como MULTIPLICADOR vs baseline (1.0 = sin cambio)
+# salvo que se indique unidad. Toda palanca != baseline DEBE citar `fuente`.
+escenario:
+  id: plantilla
+  nombre: ""
+  candidato: ""
+  fuente_programa: ""          # URL/archivo del programa de gobierno oficial
+  fecha_base: "2026-06-06"
+  horizonte_anios: 4           # 2026 -> 2030
+
+politicas:
+
+  fiscal:
+    impuesto_renta_top:   {valor: 1.0, fuente: "", afecta_A: [coeficiente_de_gini, participacion_del_top_1, recaudo_tributario]}
+    iva:                  {valor: 1.0, fuente: "", afecta_A: [pobreza_monetaria, inflacion_ipc]}
+    impuesto_patrimonio:  {valor: 1.0, fuente: "", afecta_A: [participacion_del_top_1]}
+    regla_fiscal:         {valor: "continuidad", fuente: "", afecta_A: [deficit_superavit_fiscal, deuda_publica]}
+
+  transferencias:
+    monto_per_capita:     {valor: 1.0, fuente: "", afecta_A: [pobreza_monetaria, pobreza_multidimensional_ipm]}
+    cobertura:            {valor: 1.0, fuente: "", afecta_A: [pobreza_monetaria]}
+    focalizacion_sisben:  {valor: "continuidad", fuente: ""}
+
+  laboral:
+    salario_minimo_real:  {valor: 1.0, fuente: "", afecta_A: [informalidad_laboral, pobreza_monetaria]}
+    formalizacion:        {valor: 1.0, fuente: "", afecta_A: [informalidad_laboral, cobertura_pensional]}
+    empleo_publico:       {valor: 1.0, fuente: "", afecta_A: [tasa_de_desempleo]}
+
+  educacion:
+    inversion_pib:        {valor: 1.0, fuente: "", afecta_A: [cobertura_educacion_superior, tasa_de_desercion_escolar]}
+    gratuidad_superior:   {valor: false, fuente: "", afecta_A: [cobertura_educacion_superior]}
+    cobertura_objetivo:   {valor: 1.0, fuente: "", afecta_A: [tasa_de_matricula_neta_bruta]}
+
+  salud:
+    modelo:               {valor: "continuidad", fuente: "", afecta_A: [cobertura_de_aseguramiento]}
+    inversion_pib:        {valor: 1.0, fuente: "", afecta_A: [mortalidad_infantil, acceso_barreras_a_servicios]}
+
+  pensional:
+    reforma:              {valor: "continuidad", fuente: "", afecta_A: [cobertura_pensional]}
+
+  seguridad:
+    enfoque:              {valor: "continuidad", fuente: "", afecta_A: [tasa_de_homicidios, percepcion_de_seguridad]}
+    gasto_defensa:        {valor: 1.0, fuente: ""}
+    politica_drogas:      {valor: "continuidad", fuente: "", afecta_A: [cultivos_ilicitos]}
+
+  ambiente_productivo:
+    transicion_energetica:{valor: "continuidad", fuente: "", afecta_A: [emisiones_de_co_eq, deforestacion]}
+    modelo_productivo:    {valor: "continuidad", fuente: "", afecta_A: [pib, pib_por_sectores]}
+
+  migracion:
+    regularizacion:       {valor: "continuidad", fuente: "", afecta_A: [inmigracion_venezolana]}

@@ -1,0 +1,17 @@
+# Escenario — Abelardo de la Espriella
+# Hereda la estructura de _plantilla.yaml. Las palancas se llenan como OVERRIDES,
+# cada una citando la sección del programa de gobierno oficial (campo `fuente`).
+escenario:
+  id: de_la_espriella
+  nombre: "Programa de gobierno — Abelardo de la Espriella"
+  candidato: "Abelardo de la Espriella"
+  hereda: _plantilla.yaml
+  fuente_programa: ""        # TODO: URL/archivo del programa oficial
+  fecha_base: "2026-06-06"
+  horizonte_anios: 4
+
+# TODO: a partir del programa oficial, sobreescribir aquí las palancas que cambien.
+# Ejemplo de formato (NO usar valores sin respaldo del documento):
+#   seguridad:
+#     enfoque: {valor: "mano_dura", fuente: "Programa, p.XX: ..."}
+politicas: {}

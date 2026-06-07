@@ -1,0 +1,12 @@
+# Escenario BASELINE — continuidad de política (contrafactual de referencia).
+# Hereda toda la estructura de _plantilla.yaml; sin overrides => todas las palancas
+# quedan en su valor baseline (1.0 / "continuidad").
+escenario:
+  id: baseline
+  nombre: "Continuidad (contrafactual)"
+  candidato: "—"
+  hereda: _plantilla.yaml
+  fecha_base: "2026-06-06"
+  horizonte_anios: 4
+
+politicas: {}   # sin cambios respecto al baseline

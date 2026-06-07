@@ -1,0 +1,17 @@
+# Escenario — Iván Cepeda
+# Hereda la estructura de _plantilla.yaml. Las palancas se llenan como OVERRIDES,
+# cada una citando la sección del programa de gobierno oficial (campo `fuente`).
+escenario:
+  id: cepeda
+  nombre: "Programa de gobierno — Iván Cepeda"
+  candidato: "Iván Cepeda"
+  hereda: _plantilla.yaml
+  fuente_programa: ""        # TODO: URL/archivo del programa oficial
+  fecha_base: "2026-06-06"
+  horizonte_anios: 4
+
+# TODO: a partir del programa oficial, sobreescribir aquí las palancas que cambien.
+# Ejemplo de formato (NO usar valores sin respaldo del documento):
+#   fiscal:
+#     impuesto_renta_top: {valor: 1.15, fuente: "Programa, p.XX: ...", supuesto: ""}
+politicas: {}
