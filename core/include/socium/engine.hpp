@@ -14,6 +14,8 @@
 #include "socium/parametros.hpp"
 #include "socium/economy.hpp"
 
+namespace socium { struct Network; }
+
 namespace socium {
 
 struct EngineConfig {
@@ -67,6 +69,8 @@ public:
     void exportar_departamentos(std::ostream& os);  // métricas por departamento (estado actual)
     // Activa la exportación de PERFILES (depto×sexo×edad×educación) por año -> consulta pública.
     void set_salida_perfiles(std::ostream* os) { perfiles_ = os; }
+    // Activa la red social explícita (efecto de pares en crimen y opinión).
+    void set_red(const Network* r) { red_ = r; }
 
 private:
     // mecanismos
@@ -101,6 +105,7 @@ private:
     double deuda_ = 0.0;         // stock de deuda pública (unidades de PIB-proxy)
     double recaudo_pib_ = 0.0, deficit_pib_ = 0.0, deuda_pib_ = 0.0;  // últimos ratios fiscales
     std::ostream* perfiles_ = nullptr;  // salida opcional de perfiles por año
+    const Network* red_ = nullptr;      // red social explícita (opcional)
     std::int32_t next_hogar_id_ = 0;  // siguiente id de hogar (para migrantes)
     std::int64_t migraciones_anio_ = 0;
 };

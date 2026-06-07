@@ -7,6 +7,7 @@
 #include "socium/geography.hpp"
 #include "socium/household.hpp"
 #include "socium/firm.hpp"
+#include "socium/network.hpp"
 #include "socium/engine.hpp"
 
 #include <chrono>
@@ -69,6 +70,15 @@ int main(int argc, char** argv) {
     const char* esc = arg(argc, argv, "--escenario", nullptr);
     if (esc) { pol = Politicas::load(esc); std::cerr << "escenario: " << esc << "\n"; }
     Engine eng(p, h, f, g, par, cfg, pol);
+
+    Network red;
+    const int grado = std::atoi(arg(argc, argv, "--grado-red", "0"));
+    if (grado > 0) {
+        red = construir_red(p, grado, cfg.seed);
+        eng.set_red(&red);
+        std::cerr << "red social: " << red.aristas() << " aristas, grado medio "
+                  << red.grado_medio() << ", " << red.bytes()/(1024*1024) << " MB\n";
+    }
 
     const char* out = arg(argc, argv, "--out", nullptr);
     std::ofstream fout;

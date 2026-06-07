@@ -41,6 +41,7 @@ struct Parametros {
     Real rr_hombre_joven = 3.0;        // estructura etaria-sexo del delito
     Real rr_presencia_gao = 3.06;      // exp(1.12) — presencia GAO (requiere dataset; aún no aplicado)
     Real prob_abandono_delito = 0.10;  // salir del delito por año (con oportunidades)
+    Real rr_peer_delito = 3.0;         // efecto de pares: vecinos delincuentes elevan el riesgo (red)
 
     // --- M6 movilidad ---
     Real persistencia_intergeneracional = 0.6; // supuesto, ELCA

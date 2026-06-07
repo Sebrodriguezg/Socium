@@ -19,6 +19,7 @@ add_library(socium_core
   src/agents/population.cpp
   src/agents/household.cpp
   src/agents/firm.cpp
+  src/agents/network.cpp
   src/geo/geography.cpp
   src/engine/engine.cpp
 )
