@@ -181,6 +181,29 @@ void asignar_municipios(Population& p, const Geography& g, std::uint64_t seed) {
     }
 }
 
+void ajustar_educacion_espacial(Population& p, const Geography& g) {
+    const std::int64_t n = p.size();
+    if (g.mpio_urbano.empty()) return;
+    #pragma omp parallel for schedule(static)
+    for (std::int64_t i = 0; i < n; ++i) {
+        const std::uint16_t m = p.municipio_id[i];
+        const double urb = (m < g.mpio_urbano.size()) ? g.mpio_urbano[m] : 0.7;
+        // media objetivo de años: rural 6.4, urbano 10.8 (spec §2.3); media nacional ~9.2
+        const double factor = (6.4 + 4.4 * urb) / 9.2;
+        int a = static_cast<int>(std::lround(p.anios_escolaridad[i] * factor));
+        a = std::min(a, static_cast<int>(p.edad[i]));        // no más años que la edad
+        a = std::max(0, std::min(a, 22));
+        p.anios_escolaridad[i] = static_cast<std::uint8_t>(a);
+        NivelEducativo niv = a <= 0 ? NivelEducativo::Ninguno
+            : a <= 5  ? NivelEducativo::Primaria
+            : a <= 9  ? NivelEducativo::Secundaria
+            : a <= 11 ? NivelEducativo::Media
+            : a <= 13 ? NivelEducativo::Tecnico
+            : a <= 16 ? NivelEducativo::Universitario : NivelEducativo::Posgrado;
+        if (p.edad[i] >= 5) p.nivel_educativo[i] = niv;
+    }
+}
+
 namespace metrics {
 
 Real mean_age(const Population& p) {

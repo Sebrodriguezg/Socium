@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="560" height="520" font-family="Arial">
+<rect width="560" height="520" fill="white"/>
+<text x="280.0" y="28" font-size="16" font-weight="bold" text-anchor="middle">Validación pobreza por departamento</text>
+<line x1="70.0" y1="450.0" x2="490.0" y2="70.0" stroke="#bbb" stroke-dasharray="5,4"/>
+<line x1="70" y1="450" x2="490" y2="450" stroke="#333"/>
+<line x1="70" y1="70" x2="70" y2="450" stroke="#333"/>
+<text x="105.00000000000001" y="468" font-size="11" text-anchor="middle">20%</text>
+<text x="48" y="422.3333333333333" font-size="11" text-anchor="middle">20%</text>
+<text x="245.0" y="468" font-size="11" text-anchor="middle">40%</text>
+<text x="48" y="295.66666666666663" font-size="11" text-anchor="middle">40%</text>
+<text x="385.0" y="468" font-size="11" text-anchor="middle">60%</text>
+<text x="48" y="169.0" font-size="11" text-anchor="middle">60%</text>
+<text x="280.0" y="500" font-size="13" text-anchor="middle">Real DANE 2023 (pobreza)</text>
+<text x="20" y="260.0" font-size="13" text-anchor="middle" transform="rotate(-90 20 260.0)">Modelo (pobreza)</text>
+<circle cx="454.3" cy="347.0" r="4.5" fill="#E94560"/>
+<text x="460.3" y="343.0" font-size="9" fill="#444">CHOCÓ</text>
+<circle cx="438.9" cy="314.6" r="4.5" fill="#E94560"/>
+<text x="444.9" y="310.6" font-size="9" fill="#444">LA GUAJIR</text>
+<circle cx="371.7" cy="359.0" r="4.5" fill="#E94560"/>
+<text x="377.7" y="355.0" font-size="9" fill="#444">SUCRE</text>
+<circle cx="345.8" cy="362.8" r="4.5" fill="#E94560"/>
+<text x="351.8" y="358.8" font-size="9" fill="#444">CESAR</text>
+<circle cx="342.3" cy="331.5" r="4.5" fill="#E94560"/>
+<text x="348.3" y="327.5" font-size="9" fill="#444">CÓRDOBA</text>
+<circle cx="317.1" cy="332.9" r="4.5" fill="#E94560"/>
+<text x="323.1" y="328.9" font-size="9" fill="#444">MAGDALENA</text>
+<circle cx="312.9" cy="355.5" r="4.5" fill="#E94560"/>
+<text x="318.9" y="351.5" font-size="9" fill="#444">BOLÍVAR</text>
+<circle cx="294.0" cy="322.1" r="4.5" fill="#E94560"/>
+<text x="300.0" y="318.1" font-size="9" fill="#444">CAUCA</text>
+<circle cx="246.4" cy="356.0" r="4.5" fill="#E94560"/>
+<text x="252.4" y="352.0" font-size="9" fill="#444">HUILA</text>
+<circle cx="236.6" cy="344.0" r="4.5" fill="#E94560"/>
+<text x="242.6" y="340.0" font-size="9" fill="#444">NARIÑO</text>
+<circle cx="130.2" cy="363.2" r="4.5" fill="#E94560"/>
+<text x="136.2" y="359.2" font-size="9" fill="#444">CALDAS</text>
+<circle cx="121.8" cy="360.4" r="4.5" fill="#E94560"/>
+<text x="127.8" y="356.4" font-size="9" fill="#444">CUNDINAMA</text>
+</svg>

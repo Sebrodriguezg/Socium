@@ -46,6 +46,7 @@ int main(int argc, char** argv) {
     g.cargar_conflicto(arg(argc, argv, "--conflicto", "data/reference/conflicto_municipal.csv"));
     Population p = build_synthetic(n, cfg.seed);
     asignar_municipios(p, g, cfg.seed);
+    ajustar_educacion_espacial(p, g);   // desigualdad educativa rural/urbana (spec §2.3)
     Households h = form_households(p, g, cfg.seed);
 
     Parametros par;  // valores con fuente (data/reference/parametros.yaml)
@@ -76,5 +77,10 @@ int main(int argc, char** argv) {
     const auto t1 = std::chrono::steady_clock::now();
     std::cerr << "Listo en " << std::chrono::duration<double>(t1 - t0).count() << " s\n";
     if (out) std::cerr << "serie -> " << out << "\n";
+
+    if (const char* od = arg(argc, argv, "--out-deptos", nullptr)) {
+        std::ofstream fd(od); eng.exportar_departamentos(fd);
+        std::cerr << "departamentos -> " << od << "\n";
+    }
     return 0;
 }

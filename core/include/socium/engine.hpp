@@ -59,6 +59,7 @@ public:
 
     void run(std::ostream& csv);          // simula el horizonte y escribe la serie anual
     MetricasAnuales medir(int anio);
+    void exportar_departamentos(std::ostream& os);  // métricas por departamento (estado actual)
 
 private:
     // mecanismos

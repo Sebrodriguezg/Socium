@@ -92,6 +92,10 @@ struct Geography; // fwd
 // poblacional de Geography::mpio_peso. Distribución espacial realista de los agentes.
 void asignar_municipios(Population& p, const Geography& g, std::uint64_t seed = 7);
 
+// Ajusta los años de escolaridad según la ruralidad del municipio (urbano ~10.8 años,
+// rural ~6.4; spec §2.3) para reproducir la desigualdad educativa espacial real.
+void ajustar_educacion_espacial(Population& p, const Geography& g);
+
 // --- métricas agregadas (rol `A`) ---
 namespace metrics {
 Real mean_age(const Population& p);

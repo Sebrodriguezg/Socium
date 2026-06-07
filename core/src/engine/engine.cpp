@@ -489,6 +489,32 @@ static void escribir_fila(std::ostream& os, const MetricasAnuales& m) {
        << m.tasa_migracion << "," << m.satisfaccion_media << "," << m.polarizacion << "\n";
 }
 
+// Exporta métricas agregadas por departamento (estado actual del modelo).
+void Engine::exportar_departamentos(std::ostream& os) {
+    const std::int64_t N = p_.size();
+    const std::int64_t D = g_.n_departamentos();
+    std::vector<std::int64_t> pob(D,0), ocup(D,0), desoc(D,0), inf(D,0), pobres(D,0), delinc(D,0);
+    for (std::int64_t i = 0; i < N; ++i) {
+        if (!p_.vivo[i]) continue;
+        const std::uint8_t d = p_.departamento_id[i];
+        ++pob[d];
+        if (p_.situacion_laboral[i] == SituacionLaboral::Ocupado)   { ++ocup[d]; inf[d] += p_.informal[i]; }
+        if (p_.situacion_laboral[i] == SituacionLaboral::Desocupado) ++desoc[d];
+        if (p_.es_delincuente[i]) ++delinc[d];
+        if (hh_pc_[i] < static_cast<float>(par_.linea_pobreza_mensual)) ++pobres[d];
+    }
+    os << "cod_dpto,departamento,poblacion,desempleo,informalidad,pobreza,tasa_delincuencia\n";
+    for (std::int64_t d = 0; d < D; ++d) {
+        if (pob[d] == 0) continue;
+        const double pea = ocup[d] + desoc[d];
+        os << g_.dpto_codigo[d] << ",\"" << g_.dpto_nombre[d] << "\"," << pob[d] << ","
+           << (pea ? desoc[d]/pea : 0.0) << ","
+           << (ocup[d] ? static_cast<double>(inf[d])/ocup[d] : 0.0) << ","
+           << static_cast<double>(pobres[d])/pob[d] << ","
+           << static_cast<double>(delinc[d])/pob[d] << "\n";
+    }
+}
+
 void Engine::run(std::ostream& csv) {
     csv << "anio,poblacion,edad_media,desempleo,informalidad,gini_ingreso,pobreza,pobreza_extrema,"
            "tasa_desercion,prev_enfermedad,tasa_delincuencia,cobertura_educativa,"
