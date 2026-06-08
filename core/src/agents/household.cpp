@@ -101,8 +101,13 @@ Households form_households(Population& p, const Geography& g, std::uint64_t seed
             const double pc = (s > 0) ? ingreso / s : 0.0;
             const double r = pc / SMLV;
             std::uint8_t estrato = r < 0.5 ? 1 : r < 1.0 ? 2 : r < 1.8 ? 3 : r < 3.5 ? 4 : r < 7.0 ? 5 : 6;
-            GrupoSisben sisben = r < 0.5 ? GrupoSisben::A : r < 1.0 ? GrupoSisben::B
-                               : r < 2.0 ? GrupoSisben::C : GrupoSisben::D;
+            // SISBÉN: correlacionado con el ingreso pero NO idéntico al estrato (es una encuesta
+            // multidimensional aparte). Se parte del grupo por ingreso y se dispersa ±1 de forma
+            // determinista por hogar -> existen combos reales como estrato 3 + SISBÉN B.
+            int gs = r < 0.5 ? 1 : r < 1.0 ? 2 : r < 2.0 ? 3 : 4;     // 1=A..4=D
+            const int jit = static_cast<int>((static_cast<std::uint64_t>(hid) * 0x9E3779B1ULL >> 10) % 100);
+            if (jit < 22 && gs > 1) --gs; else if (jit >= 78 && gs < 4) ++gs;
+            GrupoSisben sisben = static_cast<GrupoSisben>(gs);
 
             double tu = U(rng);
             TenenciaVivienda ten = tu < 0.50 ? TenenciaVivienda::Propia

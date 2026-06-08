@@ -426,7 +426,9 @@ window.consultarAvanzadoParquet=async function(){
   for(const e of ['baseline','cepeda','de_la_espriella']) if(!res[e])
     res[e]={n:0,ing:0,lab:0,sub:0,otro:0,sat:0,acc:{pobre:0,ipm:0,ocupado:0,enfermo:0,delito:0,estres:0}};
   if(total===0){ msg.textContent='Ningún agente coincide con esos filtros. Quita alguno.'; return; }
-  window.pintarAvanzado(res, `Promedio de ${res.baseline.n.toLocaleString('es-CO')} agentes (de todos) con ese perfil.`);
+  const nb=res.baseline.n;
+  const nota = nb<30 ? ' (perfil muy específico: pocas coincidencias, promedio con ruido — quita algún filtro para más precisión)' : '';
+  window.pintarAvanzado(res, `Promedio de ${nb.toLocaleString('es-CO')} agentes con ese perfil${nota}.`);
 };
 initDuck();
 </script>

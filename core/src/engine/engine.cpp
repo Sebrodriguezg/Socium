@@ -301,7 +301,13 @@ void Engine::mercado_laboral() {
         if (!p_.vivo[i]) continue;
         const int edad = p_.edad[i];
         if (edad < 15) { p_.situacion_laboral[i] = SituacionLaboral::MenorEdad; p_.ingreso_laboral[i] = 0; continue; }
-        if (p_.asiste_escuela[i]) { p_.situacion_laboral[i] = SituacionLaboral::Inactivo; p_.ingreso_laboral[i] = 0; continue; }
+        if (p_.asiste_escuela[i]) {  // estudiante: no ocupa un puesto, pero ~30% de los 18+ trabaja medio tiempo
+            p_.situacion_laboral[i] = SituacionLaboral::Inactivo;
+            const std::uint64_t hsh = static_cast<std::uint64_t>(i) * 2654435761ULL;  // determinista (no toca el RNG)
+            p_.ingreso_laboral[i] = (edad >= 18 && (hsh >> 8) % 100 < 30)
+                ? static_cast<float>(par_.smlv * 0.5 * (0.5 + ((hsh >> 20) % 1000) / 1000.0)) : 0.0f;
+            continue;
+        }
 
         const int anios = p_.anios_escolaridad[i];
         if (uniform01() > prob_participacion(p_, i)) {
