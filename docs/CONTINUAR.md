@@ -45,6 +45,13 @@ C++20/OpenMP + Python + web estática pública. Trato neutral y simétrico.
 curl -sL "https://docs.google.com/spreadsheets/d/1RlfprtEk8hGivvHPxxbsXbR7qkdZMW5_MhhU_Eobfpc/export?format=csv"
 ```
 
+## 3b. CALIBRACIÓN DE LA POBLACIÓN (gran pendiente, detectado 08-jun)
+La población sintética usa sorteos **independientes** → la distribución conjunta no es realista
+(perfiles comunes pueden dar 0 agentes; p.ej. joven cuenta propia vs estudiante). Plan por fases
+en **`docs/plan-calibracion-poblacion.md`**: generación condicional en orden causal con
+conditionales del DANE (GEIH/Censo), luego resampleo de microdatos. Es el mayor salto de realismo
+pendiente; requiere re-correr 50M al final.
+
 ## 4. DECISIONES PENDIENTES (aquí quedamos)
 1. **Consideración #3** (IPM): ✅ **IMPLEMENTADA (alcance A+B)** — IPM del DANE (nacional 12.2%,
    urbano 7.8%, rural 27%), filtros y panel web, desplazamiento forzado (sesgo rural), género
