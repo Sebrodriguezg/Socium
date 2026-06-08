@@ -195,12 +195,33 @@ async function initMuestra(){
   Object.entries(deptos).sort((a,b)=>a[1].localeCompare(b[1])).forEach(([cod,nom])=>{
     const o=document.createElement("option"); o.value=parseInt(cod); o.textContent=nom; sel.appendChild(o);});
 }
+const ADV_COLS=[["pobre","prob. de ser pobre (monetaria)"],["ipm","pobreza multidimensional (IPM)"],
+  ["ocupado","prob. de estar ocupado"],["enfermo","prob. de enfermar"],
+  ["delito","prob. delincuencia"],["estres","estrés financiero (deuda)"]];
+const ESC3=["baseline","cepeda","de_la_espriella"];
+function fmtAdv(lab,v){ if(lab.includes("Ingreso")||lab.includes("·")) return "$"+Math.round(v).toLocaleString("es-CO");
+  if(lab.includes("Satisf")) return v.toFixed(1); return (v*100).toFixed(1)+"%"; }
+// pinta la tabla de resultados (res[esc]={n,ing,lab,sub,otro,sat,acc:{...}})
+function pintarAvanzado(res, msgText){
+  document.getElementById("aMsg").textContent=msgText;
+  const tb=document.getElementById("aTbody"); tb.innerHTML="";
+  function fila(lab,fn,mejorAlto){
+    const vals=ESC3.map(e=>fn(res[e])); const best=mejorAlto?Math.max(...vals):Math.min(...vals);
+    let h=`<td>${lab}</td>`; vals.forEach(v=>h+=`<td class="${v===best?'best':''}">${fmtAdv(lab,v)}</td>`);
+    const tr=document.createElement("tr"); tr.innerHTML=h; tb.appendChild(tr);
+  }
+  fila("Ingreso por persona", r=>r.ing, true);
+  fila("  · de trabajo", r=>r.lab, true);
+  fila("  · de subsidios/pensión", r=>r.sub, true);
+  fila("  · de hogar/ayuda/otros", r=>r.otro, true);
+  ADV_COLS.forEach(c=>fila(c[1], r=>r.acc[c[0]], c[0]==="ocupado"));
+  fila("Satisfacción (0-10)", r=>r.sat, true);
+  document.getElementById("aTabla").style.display="table";
+}
 function consultarAvanzado(){
+  if(window.DUCK_READY){ consultarAvanzadoParquet(); return; }   // ruta DuckDB (50M) si está lista
   const iE=MIDX["edad"], iIng=MIDX["ingreso_pc"], iLab=MIDX["ingreso_lab"];
-  const cols=[["pobre","prob. de ser pobre (monetaria)"],["ipm","pobreza multidimensional (IPM)"],
-    ["ocupado","prob. de estar ocupado"],
-    ["enfermo","prob. de enfermar"],["delito","prob. delincuencia"],
-    ["estres","estrés financiero (deuda)"]];
+  const cols=ADV_COLS;
   // construir filtros como predicados, en orden de prioridad (los últimos se descartan primero)
   const filtros=[]; // {lab, test}
   const cod=document.getElementById("aDepto").value;
@@ -235,26 +256,11 @@ function consultarAvanzado(){
   let fs=filtros.slice(), dropped=[], out=calcular(fs);
   while(out.nmin<15 && fs.length>1){ dropped.push(fs.pop().lab); out=calcular(fs); }
   const res=out.res;
-  const msg=document.getElementById("aMsg");
-  if(out.nmin<15 && fs.length<=1){ // ni con un solo filtro hay muestra (raro)
-    msg.textContent="No hay suficientes agentes ni relajando filtros; sube el nº de agentes (cluster)."; }
-  else msg.textContent=`Promedio de ${res.baseline.n} agentes`+(dropped.length?` (perfil poco común: se ignoró ${dropped.join(", ")}).`:` con ese perfil.`);
-  const tb=document.getElementById("aTbody"); tb.innerHTML="";
-  const ESC3=["baseline","cepeda","de_la_espriella"];
-  function fila(lab,fn,mejorAlto){
-    const vals=ESC3.map(e=>fn(res[e])); const best=mejorAlto?Math.max(...vals):Math.min(...vals);
-    let h=`<td>${lab}</td>`; vals.forEach((v,k)=>h+=`<td class="${v===best?'best':''}">${fmt(lab,v)}</td>`);
-    const tr=document.createElement("tr"); tr.innerHTML=h; tb.appendChild(tr);
-  }
-  function fmt(lab,v){ if(lab.includes("Ingreso")||lab.includes("·")) return "$"+Math.round(v).toLocaleString("es-CO");
-    if(lab.includes("Satisf")) return v.toFixed(1); return (v*100).toFixed(1)+"%"; }
-  fila("Ingreso por persona", r=>r.ing, true);
-  fila("  · de trabajo", r=>r.lab, true);
-  fila("  · de subsidios/pensión", r=>r.sub, true);
-  fila("  · de hogar/ayuda/otros", r=>r.otro, true);
-  cols.forEach(c=>fila(c[1], r=>r.acc[c[0]], c[0]==="ocupado"));
-  fila("Satisfacción (0-10)", r=>r.sat, true);
-  document.getElementById("aTabla").style.display="table";
+  let msgText;
+  if(out.nmin<15 && fs.length<=1)
+    msgText="No hay suficientes agentes ni relajando filtros; sube el nº de agentes (cluster).";
+  else msgText=`Promedio de ${res.baseline.n} agentes`+(dropped.length?` (perfil poco común: se ignoró ${dropped.join(", ")}).`:` con ese perfil.`);
+  pintarAvanzado(res, msgText);
 }
 
 // ---------- MAPA COROPLÉTICO ----------
@@ -364,6 +370,57 @@ if(FORM_URL){ const a=document.getElementById("formLink"); a.href=FORM_URL; }
 initMapa();
 initMuestra();
 initMacro();
+</script>
+
+<!-- Modo 50M: si existen los Parquet (web/data/agentes_*.parquet), la consulta avanzada
+     usa DuckDB-WASM sobre TODOS los agentes; si no, cae a la muestra JSON automáticamente. -->
+<script type="module">
+import * as duckdb from 'https://cdn.jsdelivr.net/npm/@duckdb/duckdb-wasm@1.29.0/+esm';
+const FILES={baseline:'data/agentes_baseline.parquet',cepeda:'data/agentes_cepeda.parquet',de_la_espriella:'data/agentes_de_la_espriella.parquet'};
+let conn=null;
+async function initDuck(){
+  try{ const h=await fetch(FILES.baseline,{method:'HEAD'}); if(!h.ok) return; }catch(e){ return; }  // sin parquet -> muestra JSON
+  try{
+    const bundle=await duckdb.selectBundle(duckdb.getJsDelivrBundles());
+    const worker=new Worker(bundle.mainWorker);
+    const db=new duckdb.AsyncDuckDB(new duckdb.ConsoleLogger(), worker);
+    await db.instantiate(bundle.mainModule, bundle.pthreadWorker);
+    for(const [esc,url] of Object.entries(FILES))
+      await db.registerFileURL('a_'+esc+'.parquet', new URL(url,location.href).href, duckdb.DuckDBDataProtocol.HTTP, false);
+    conn=await db.connect();
+    window.DUCK_READY=true;
+    const m=document.getElementById('aMsg'); if(m) m.textContent='Modo 50M activo (DuckDB): la consulta usa todos los agentes.';
+  }catch(e){ console.warn('DuckDB no disponible, uso la muestra JSON:', e); }
+}
+function whereSQL(){
+  const g=id=>document.getElementById(id), W=[];
+  const eq={aSexo:'sexo',aDepto:'dpto',aEduc:'educ',aSit:'situacion',aEstrato:'estrato',aSalud:'salud',aTen:'tenencia',aInt:'internet',aSis:'sisben',aDesp:'desplazado',aGen:'genero_div',aEtnia:'etnia',aMig:'migrante',aUrb:'urbano'};
+  for(const [id,col] of Object.entries(eq)){ const e=g(id); if(e&&e.value!=='') W.push(`${col}=${parseInt(e.value)}`); }
+  const ed=g('aEdad').value; if(ed!=='') W.push(`abs(edad-${parseInt(ed)})<=7`);
+  const su=g('aSueldo').value; if(su!==''){ const s=parseInt(su); W.push(`abs(ingreso_lab-${s})<=${Math.round(0.35*s)}`); }
+  const hj=g('aHijos').value; if(hj!=='') W.push(hj==='1'?'hijos>0':'hijos=0');
+  return W.length?('WHERE '+W.join(' AND ')):'';
+}
+window.consultarAvanzadoParquet=async function(){
+  const msg=document.getElementById('aMsg'); msg.textContent='Consultando todos los agentes…';
+  const sql=`SELECT escenario, count(*) n, avg(ingreso_pc) ing, avg(pc_lab) lab, avg(pc_sub) sub,
+    avg(pc_otro) otro, avg(satisfaccion) sat, avg(pobre) pobre, avg(ipm) ipm, avg(ocupado) ocupado,
+    avg(enfermo) enfermo, avg(delito) delito, avg(estres) estres
+    FROM read_parquet(['a_baseline.parquet','a_cepeda.parquet','a_de_la_espriella.parquet'])
+    ${whereSQL()} GROUP BY escenario`;
+  let rows;
+  try{ const r=await conn.query(sql); rows=r.toArray().map(x=>x.toJSON()); }
+  catch(e){ msg.textContent='Error en la consulta: '+e; return; }
+  const res={}; let total=0;
+  for(const x of rows){ total+=Number(x.n);
+    res[x.escenario]={n:Number(x.n),ing:+x.ing,lab:+x.lab,sub:+x.sub,otro:+x.otro,sat:+x.sat,
+      acc:{pobre:+x.pobre,ipm:+x.ipm,ocupado:+x.ocupado,enfermo:+x.enfermo,delito:+x.delito,estres:+x.estres}}; }
+  for(const e of ['baseline','cepeda','de_la_espriella']) if(!res[e])
+    res[e]={n:0,ing:0,lab:0,sub:0,otro:0,sat:0,acc:{pobre:0,ipm:0,ocupado:0,enfermo:0,delito:0,estres:0}};
+  if(total===0){ msg.textContent='Ningún agente coincide con esos filtros. Quita alguno.'; return; }
+  window.pintarAvanzado(res, `Promedio de ${res.baseline.n.toLocaleString('es-CO')} agentes (de todos) con ese perfil.`);
+};
+initDuck();
 </script>
 </body>
 </html>
