@@ -36,42 +36,7 @@
 </header>
 <div class="wrap">
   <div class="card">
-    <div class="form">
-      <div><label>Edad</label><input type="number" id="edad" min="0" max="100" value="30"></div>
-      <div><label>Sexo</label><select id="sexo"><option value="Mujer">Mujer</option><option value="Hombre">Hombre</option></select></div>
-      <div><label>Departamento</label><select id="depto"></select></div>
-      <div><label>Educación</label><select id="educ">
-        <option value="bajo">Baja (≤primaria)</option>
-        <option value="medio">Media (secundaria/bachiller)</option>
-        <option value="alto">Alta (técnica/universitaria)</option></select></div>
-      <div><label>Situación laboral</label><select id="situacion">
-        <option value="empleado_formal">Empleado formal (privado)</option>
-        <option value="empleado_publico">Empleado público</option>
-        <option value="cuenta_propia">Cuenta propia</option>
-        <option value="informal">Informal</option>
-        <option value="desempleado">Desempleado</option>
-        <option value="inactivo">Inactivo / pensionado</option>
-        <option value="estudiante">Estudiante</option></select></div>
-      <button onclick="consultar()">Ver cómo sería mi vida</button>
-    </div>
-    <div id="msg"></div>
-  </div>
-
-  <div class="card" id="resultado" style="display:none">
-    <div class="yearbar" id="yearbar"></div>
-    <table>
-      <thead><tr><th>Indicador</th>
-        <th class="sc-base">Continuidad</th><th class="sc-cepeda">Cepeda</th><th class="sc-dle">De la Espriella</th></tr></thead>
-      <tbody id="tbody"></tbody>
-    </table>
-    <div class="note">Promedios de personas con tu mismo perfil (departamento, sexo, grupo de edad y nivel
-      educativo). Modelo basado en agentes, calibrado a cifras oficiales de DANE 2023 (pobreza, Gini,
-      desempleo, informalidad). Las cifras son <b>escenarios de simulación</b> a partir de los programas de
-      gobierno publicados, no predicciones; tratamiento neutral y simétrico de ambos candidatos.</div>
-  </div>
-
-  <div class="card">
-    <h3 style="margin:0 0 4px">Consulta avanzada (más filtros)</h3>
+    <h3 style="margin:0 0 4px">¿Cómo sería tu vida según cada gobierno?</h3>
     <p style="font-size:12px;color:#778;margin:0 0 12px">Filtra una muestra de agentes por cualquier
       combinación. Deja "Cualquiera" lo que no quieras fijar. Resultado: promedio 2030 de quienes coinciden.</p>
     <div class="form" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr))">
@@ -396,7 +361,6 @@ function renderMacro(){
 const FORM_URL="https://forms.gle/FMZbfYk64mKCBCQz8";  // formulario de consideraciones
 if(FORM_URL){ const a=document.getElementById("formLink"); a.href=FORM_URL; }
 
-init();
 initMapa();
 initMuestra();
 initMacro();
