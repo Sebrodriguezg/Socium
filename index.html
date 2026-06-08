@@ -83,6 +83,10 @@
       <div><label>Situación</label><select id="aSit"><option value="">Cualquiera</option><option value="2">Emp. público</option><option value="3">Emp. formal</option><option value="4">Cuenta propia</option><option value="5">Informal</option><option value="6">Desempleado</option><option value="7">Inactivo/pens.</option><option value="1">Estudiante</option></select></div>
       <div><label>Estrato</label><select id="aEstrato"><option value="">Cualquiera</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select></div>
       <div><label>Salud</label><select id="aSalud"><option value="">Cualquiera</option><option value="1">Contributivo</option><option value="2">Subsidiado</option><option value="0">Sin afiliación</option></select></div>
+      <div><label>Vivienda</label><select id="aTen"><option value="">Cualquiera</option><option value="0">Propia</option><option value="1">Arriendo</option><option value="2">Otra</option></select></div>
+      <div><label>Internet</label><select id="aInt"><option value="">Cualquiera</option><option value="1">Con internet</option><option value="0">Sin internet</option></select></div>
+      <div><label>¿Tiene hijos?</label><select id="aHijos"><option value="">Cualquiera</option><option value="1">Sí</option><option value="0">No</option></select></div>
+      <div><label>SISBÉN</label><select id="aSis"><option value="">Cualquiera</option><option value="1">Grupo A</option><option value="2">Grupo B</option><option value="3">Grupo C</option><option value="4">Grupo D</option></select></div>
       <div><label>Etnia</label><select id="aEtnia"><option value="">Cualquiera</option><option value="0">Ninguna</option><option value="1">Indígena</option><option value="2">Afro (NARP)</option></select></div>
       <div><label>¿Migrante?</label><select id="aMig"><option value="">Cualquiera</option><option value="0">No</option><option value="1">Sí</option></select></div>
       <div><label>Zona</label><select id="aUrb"><option value="">Cualquiera</option><option value="1">Urbana</option><option value="0">Rural</option></select></div>
@@ -226,7 +230,8 @@ async function initMuestra(){
 }
 function consultarAvanzado(){
   const iE=MIDX["edad"], iIng=MIDX["ingreso_pc"], iLab=MIDX["ingreso_lab"];
-  const cols=[["pobre","prob. de ser pobre"],["ocupado","prob. de estar ocupado"],
+  const cols=[["pobre","prob. de ser pobre (monetaria)"],["ipm","pobreza multidimensional (IPM)"],
+    ["ocupado","prob. de estar ocupado"],
     ["enfermo","prob. de enfermar"],["delito","prob. delincuencia"],
     ["estres","estrés financiero (deuda)"]];
   // construir filtros como predicados, en orden de prioridad (los últimos se descartan primero)
@@ -237,10 +242,13 @@ function consultarAvanzado(){
   if(ed!=="") filtros.push({lab:"edad", test:r=>Math.abs(r[iE]-parseInt(ed))<=7});
   const su=document.getElementById("aSueldo").value;
   if(su!=="") filtros.push({lab:"sueldo", test:r=>{const s=parseInt(su); return Math.abs(r[iLab]*1000-s)<=0.35*s;}});
-  const EQ={sexo:"aSexo",educ:"aEduc",situacion:"aSit",estrato:"aEstrato",salud:"aSalud",etnia:"aEtnia",migrante:"aMig",urbano:"aUrb"};
-  const ORD=["sexo","educ","situacion","estrato","salud","etnia","migrante","urbano"];
-  for(const campo of ORD){ const v=document.getElementById(EQ[campo]).value;
+  const EQ={sexo:"aSexo",educ:"aEduc",situacion:"aSit",estrato:"aEstrato",salud:"aSalud",
+            tenencia:"aTen",internet:"aInt",sisben:"aSis",etnia:"aEtnia",migrante:"aMig",urbano:"aUrb"};
+  const ORD=["sexo","educ","situacion","estrato","tenencia","internet","sisben","salud","etnia","migrante","urbano"];
+  for(const campo of ORD){ const el=document.getElementById(EQ[campo]); if(!el) continue; const v=el.value;
     if(v!=="") filtros.push({lab:campo, test:r=>r[MIDX[campo]]===parseInt(v)}); }
+  const hij=document.getElementById("aHijos"); if(hij && hij.value!=="")
+    filtros.push({lab:"hijos", test:(v=>r=>(r[MIDX["hijos"]]>0)===(v==="1"))(hij.value)});
 
   function calcular(fs){
     const res={}; let nmin=1e9;
@@ -357,7 +365,9 @@ const MACRO=[ ["pib_index","PIB (índice, base=1)",v=>Number(v).toFixed(3),true]
   ["trm","Dólar (TRM, COP/USD)",v=>"$"+Math.round(v).toLocaleString("es-CO"),false],
   ["deficit_pib","Déficit fiscal (% PIB)",v=>(v*100).toFixed(1)+"%",false],
   ["deuda_pib","Deuda pública (% PIB)",v=>(v*100).toFixed(1)+"%",false],
-  ["pobreza","Pobreza nacional",v=>(v*100).toFixed(1)+"%",false],
+  ["pobreza","Pobreza monetaria",v=>(v*100).toFixed(1)+"%",false],
+  ["ipm","Pobreza multidimensional (IPM)",v=>(v*100).toFixed(1)+"%",false],
+  ["ipm_rural","  · IPM rural",v=>(v*100).toFixed(1)+"%",false],
   ["gini_ingreso","Desigualdad (Gini)",v=>Number(v).toFixed(3),false],
   ["desempleo","Desempleo",v=>(v*100).toFixed(1)+"%",false] ];
 async function initMacro(){
