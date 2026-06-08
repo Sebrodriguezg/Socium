@@ -220,6 +220,8 @@ function pintarAvanzado(res, msgText){
 }
 function consultarAvanzado(){
   if(window.DUCK_READY){ consultarAvanzadoParquet(); return; }   // ruta DuckDB (50M) si está lista
+  if(window.DUCK_STATE==='loading'){ document.getElementById("aMsg").textContent=
+    "Cargando el motor de 50M… espera unos segundos y vuelve a darle Calcular."; return; }
   const iE=MIDX["edad"], iIng=MIDX["ingreso_pc"], iLab=MIDX["ingreso_lab"];
   const cols=ADV_COLS;
   // construir filtros como predicados, en orden de prioridad (los últimos se descartan primero)
@@ -378,19 +380,25 @@ initMacro();
 import * as duckdb from 'https://cdn.jsdelivr.net/npm/@duckdb/duckdb-wasm@1.29.0/+esm';
 const FILES={baseline:'data/agentes_baseline.parquet',cepeda:'data/agentes_cepeda.parquet',de_la_espriella:'data/agentes_de_la_espriella.parquet'};
 let conn=null;
+const setMsg=t=>{ const m=document.getElementById('aMsg'); if(m) m.textContent=t; };
 async function initDuck(){
   try{ const h=await fetch(FILES.baseline,{method:'HEAD'}); if(!h.ok) return; }catch(e){ return; }  // sin parquet -> muestra JSON
+  window.DUCK_STATE='loading'; setMsg('Cargando motor de consulta (50M)… puede tardar unos segundos.');
   try{
     const bundle=await duckdb.selectBundle(duckdb.getJsDelivrBundles());
-    const worker=new Worker(bundle.mainWorker);
+    // el Worker debe ser del MISMO origen -> se envuelve el script del CDN en un Blob
+    const workerURL=URL.createObjectURL(new Blob([`importScripts("${bundle.mainWorker}");`],{type:'text/javascript'}));
+    const worker=new Worker(workerURL);
     const db=new duckdb.AsyncDuckDB(new duckdb.ConsoleLogger(), worker);
     await db.instantiate(bundle.mainModule, bundle.pthreadWorker);
+    URL.revokeObjectURL(workerURL);
     for(const [esc,url] of Object.entries(FILES))
       await db.registerFileURL('a_'+esc+'.parquet', new URL(url,location.href).href, duckdb.DuckDBDataProtocol.HTTP, false);
     conn=await db.connect();
-    window.DUCK_READY=true;
-    const m=document.getElementById('aMsg'); if(m) m.textContent='Modo 50M activo (DuckDB): la consulta usa todos los agentes.';
-  }catch(e){ console.warn('DuckDB no disponible, uso la muestra JSON:', e); }
+    window.DUCK_READY=true; window.DUCK_STATE='ready';
+    setMsg('Modo 50M activo (DuckDB): la consulta usa TODOS los agentes. Ya puedes Calcular.');
+  }catch(e){ window.DUCK_STATE='error'; console.warn('DuckDB no disponible:', e);
+    setMsg('No se pudo activar el modo 50M ('+(e&&e.message||e)+'); uso la muestra. Recarga para reintentar.'); }
 }
 function whereSQL(){
   const g=id=>document.getElementById(id), W=[];
