@@ -35,3 +35,21 @@ falta implementar la FUENTE del ingreso: laboral, subsidio, o solo probabilidad 
 - La **web** muestra ahora la composición ("· de trabajo / · de subsidios/pensión /
   · de hogar/ayuda/otros") -> queda claro por qué un desempleado tiene (o no) ingresos.
 - DANE 2026 intacto (Gini 0.555, desempleo 10.5%, informal 0.551), 5/5 stylized facts.
+
+## #3 — 2026-06-07 · laura94cobos@gmail.com
+**Categoría:** Individuo / demografía · **Severidad:** 2 (mejoraría la precisión notablemente)
+**Falta (atributos/condiciones materiales del agente):** ¿tiene hijos? ¿cuántos?; ¿hogar
+estable?; género con opciones para minorías; ¿desplazamiento forzado?; acceso a servicios
+públicos (cuáles); acceso a internet; SISBÉN y puntaje; % de pertenencia a comunidad
+minoritaria/vulnerable; ¿beneficiario de subsidio? cuál (selección múltiple); ¿casa propia
+o arriendo?; electrodomésticos del hogar (TV, nevera, estufa, licuadora, computador, teléfono).
+
+**Análisis (esto es esencialmente la POBREZA MULTIDIMENSIONAL — IPM/DANE):**
+- Ya en el agente/hogar (solo falta exponer como filtro): tenencia (propia/arriendo),
+  nº de hijos (composición del hogar), SISBÉN, estrato, subsidios.
+- Cheap de añadir (flag + asignación por estrato/zona/ENCV): acceso a internet, desplazamiento
+  forzado (atar a municipios de conflicto), hacinamiento (hogar estable).
+- Requiere datos (ENCV/IPM): servicios públicos por tipo, electrodomésticos -> construir el
+  **Índice de Pobreza Multidimensional (IPM, 15 indicadores/5 dimensiones, DANE)**.
+
+**Estado:** PENDIENTE (ver plan/scoping con el usuario).
