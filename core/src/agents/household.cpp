@@ -26,6 +26,22 @@ static int sample_size(double u) {
 
 static constexpr double SMLV = 1'300'000.0; // salario mínimo aprox (referencia)
 
+// Tasa de privación material por estrato (1..6) y zona, para el IPM (consideración #3).
+// Calibrado a la brecha urbano-rural del DANE (rural >> urbano). Ver data/reference/
+// privaciones_ipm.csv y docs/plan-consideracion-3.md. Índice 0..5 = estrato 1..6.
+struct TasasPriv { double urb[6]; double rur[6]; };
+static const TasasPriv PRIV[9] = {
+  /*sin_agua*/         {{0.10,0.05,0.02,0.005,0.00,0.00},{0.45,0.30,0.12,0.04,0.01,0.00}},
+  /*sin_excretas*/     {{0.12,0.06,0.02,0.005,0.00,0.00},{0.50,0.32,0.12,0.04,0.01,0.00}},
+  /*piso_inadec*/      {{0.10,0.05,0.01,0.005,0.00,0.00},{0.35,0.20,0.06,0.02,0.00,0.00}},
+  /*pared_inadec*/     {{0.05,0.02,0.005,0.00,0.00,0.00},{0.15,0.08,0.02,0.005,0.00,0.00}},
+  /*hacinamiento*/     {{0.22,0.12,0.05,0.02,0.005,0.00},{0.28,0.18,0.08,0.03,0.01,0.00}},
+  /*sin_internet*/     {{0.50,0.30,0.15,0.05,0.02,0.00},{0.82,0.65,0.40,0.20,0.08,0.02}},
+  /*barrera_priminf*/  {{0.16,0.10,0.05,0.02,0.01,0.00},{0.32,0.22,0.10,0.04,0.01,0.00}},
+  /*trabajo_infantil*/ {{0.04,0.02,0.01,0.005,0.00,0.00},{0.11,0.07,0.03,0.01,0.00,0.00}},
+  /*barrera_salud*/    {{0.10,0.07,0.05,0.03,0.02,0.01},{0.18,0.13,0.08,0.04,0.02,0.01}},
+};
+
 Households form_households(Population& p, const Geography& g, std::uint64_t seed) {
     const std::int64_t N = p.size();
     const std::int64_t M = g.n_municipios();
@@ -101,6 +117,24 @@ Households form_households(Population& p, const Geography& g, std::uint64_t seed
             h.estrato.push_back(estrato);
             h.sisben.push_back(sisben);
             h.tenencia.push_back(ten);
+
+            // privaciones materiales (IPM) por estrato × zona
+            const int e = estrato - 1;
+            const bool urbano = (p.municipio_id[order[idx]] < g.mpio_urbano.size())
+                                && g.mpio_urbano[p.municipio_id[order[idx]]] >= 0.5f;
+            auto priv = [&](int k){ double pr = urbano ? PRIV[k].urb[e] : PRIV[k].rur[e];
+                                    return static_cast<std::uint8_t>(U(rng) < pr ? 1 : 0); };
+            h.sin_agua.push_back(priv(0));
+            h.sin_excretas.push_back(priv(1));
+            h.piso_inadec.push_back(priv(2));
+            h.pared_inadec.push_back(priv(3));
+            // hacinamiento: por tasa, o forzado si >3 personas por (cuartos≈tamaño/2)
+            std::uint8_t hac = priv(4); if (s >= 6 && U(rng) < 0.5) hac = 1;
+            h.hacinamiento.push_back(hac);
+            h.sin_internet.push_back(priv(5));
+            h.barrera_priminf.push_back(menores > 0 ? priv(6) : 0);
+            h.trabajo_infantil.push_back(menores > 0 ? priv(7) : 0);
+            h.barrera_salud.push_back(priv(8));
 
             idx += s;
         }

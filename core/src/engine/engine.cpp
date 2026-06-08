@@ -111,6 +111,54 @@ void Engine::asignar_ayuda() {
             && uniform01() < par_.prob_ayuda_informal) ? 1 : 0;
 }
 
+// Índice de Pobreza Multidimensional (IPM, metodología DANE, consideración #3).
+// 5 dimensiones × 20%; un hogar es pobre multidimensional si la suma de privaciones
+// ponderadas ≥ 1/3. Los indicadores de educación/trabajo/salud se derivan del estado de
+// los miembros; los de vivienda/niñez vienen de los flags del hogar (asignados por estrato×zona).
+void Engine::calcular_ipm() {
+    const std::int64_t N = p_.size(), H = h_.size();
+    std::vector<std::uint8_t> analfab(H,0), inasist(H,0), rezago(H,0),
+                              informalh(H,0), ocupadoh(H,0), desemph(H,0), sinsalud(H,0);
+    std::vector<float> edu_sum(H,0.0f); std::vector<int> adultos(H,0), miembros(H,0);
+    for (std::int64_t i = 0; i < N; ++i) {
+        if (!p_.vivo[i]) continue;
+        const std::int32_t h = p_.hogar_id[i]; if (h < 0 || h >= H) continue;
+        ++miembros[h];
+        const int edad = p_.edad[i];
+        if (edad >= 15) { ++adultos[h]; edu_sum[h] += p_.anios_escolaridad[i];
+                          if (p_.nivel_educativo[i] == NivelEducativo::Ninguno) analfab[h] = 1; }
+        if (edad >= 6 && edad <= 16 && !p_.asiste_escuela[i]) inasist[h] = 1;
+        if (edad >= 9 && edad <= 17 && p_.anios_escolaridad[i] + 6 + 2 < edad) rezago[h] = 1; // 2+ años rezago
+        if (p_.situacion_laboral[i] == SituacionLaboral::Ocupado) { ocupadoh[h] = 1; if (p_.informal[i]) informalh[h] = 1; }
+        if (p_.situacion_laboral[i] == SituacionLaboral::Desocupado) desemph[h] = 1;
+        if (p_.afiliacion_salud[i] == AfiliacionSalud::Ninguno) sinsalud[h] = 1;
+    }
+    ipm_pobre_.assign(H, 0);
+    std::int64_t pop = 0, pobres = 0, pop_u = 0, pob_u = 0, pop_r = 0, pob_r = 0;
+    for (std::int64_t h = 0; h < H; ++h) {
+        if (miembros[h] == 0) continue;
+        const bool bajo_logro = adultos[h] > 0 && (edu_sum[h] / adultos[h]) < 9.0f;
+        const bool desemp_ld = desemph[h] && !ocupadoh[h];   // proxy desempleo larga duración
+        double w = 0.0;
+        w += 0.10 * bajo_logro + 0.10 * analfab[h];                                   // educación
+        w += 0.05 * inasist[h] + 0.05 * rezago[h] + 0.05 * h_.barrera_priminf[h]
+           + 0.05 * h_.trabajo_infantil[h];                                            // niñez
+        w += 0.10 * desemp_ld + 0.10 * informalh[h];                                   // trabajo
+        w += 0.10 * sinsalud[h] + 0.10 * h_.barrera_salud[h];                          // salud
+        w += 0.05 * (h_.sin_agua[h] + h_.sin_excretas[h] + h_.piso_inadec[h]
+                   + h_.pared_inadec[h] + h_.hacinamiento[h]);                         // vivienda
+        const bool pobre = w >= (1.0 / 3.0 - 1e-9);
+        ipm_pobre_[h] = pobre ? 1 : 0;
+        const bool urb = h_.municipio_id[h] < g_.mpio_urbano.size() && g_.mpio_urbano[h_.municipio_id[h]] >= 0.5f;
+        pop += miembros[h]; if (pobre) pobres += miembros[h];
+        if (urb) { pop_u += miembros[h]; if (pobre) pob_u += miembros[h]; }
+        else     { pop_r += miembros[h]; if (pobre) pob_r += miembros[h]; }
+    }
+    ipm_     = pop   ? static_cast<double>(pobres) / pop : 0.0;
+    ipm_urb_ = pop_u ? static_cast<double>(pob_u) / pop_u : 0.0;
+    ipm_rur_ = pop_r ? static_cast<double>(pob_r) / pop_r : 0.0;
+}
+
 // Ingreso per cápita del hogar DESCOMPUESTO por fuente (responde "¿de dónde sale el
 // ingreso de alguien sin empleo?"): laboral, subsidio (pensión/Colombia Mayor/transferencias)
 // y otro (remesas/rentas + ayuda informal probabilística). M1/M5 usan el total.
@@ -619,6 +667,7 @@ MetricasAnuales Engine::medir(int anio) {
     m.crecimiento = crecimiento_;
     m.tasa_migracion = vivos ? static_cast<Real>(migraciones_anio_) / vivos : 0;
     m.recaudo_pib = recaudo_pib_; m.deficit_pib = deficit_pib_; m.deuda_pib = deuda_pib_;
+    m.ipm = ipm_; m.ipm_urbano = ipm_urb_; m.ipm_rural = ipm_rur_;
     m.deuda_informal = adultos ? static_cast<Real>(con_deuda) / adultos : 0;
     m.estres_financiero = adultos ? static_cast<Real>(estresados) / adultos : 0;
     m.inflacion = inflacion_; m.trm = trm_;
@@ -638,7 +687,8 @@ static void escribir_fila(std::ostream& os, const MetricasAnuales& m) {
        << m.tasa_migracion << "," << m.satisfaccion_media << "," << m.polarizacion << ","
        << m.recaudo_pib << "," << m.deficit_pib << "," << m.deuda_pib << ","
        << m.deuda_informal << "," << m.estres_financiero << ","
-       << m.inflacion << "," << m.trm << "\n";
+       << m.inflacion << "," << m.trm << ","
+       << m.ipm << "," << m.ipm_urbano << "," << m.ipm_rural << "\n";
 }
 
 // Exporta métricas agregadas por departamento (estado actual del modelo).
@@ -779,12 +829,16 @@ void Engine::exportar_muestra(std::ostream& os, int paso) {
     if (paso < 1) paso = 1;
     const double linea = par_.linea_pobreza_mensual;
     os << "dpto,sexo,edad,educ,situacion,estrato,salud,hogar,etnia,migrante,urbano,"
-          "ingreso_pc,ingreso_lab,pc_lab,pc_sub,pc_otro,ocupado,pobre,enfermo,delito,satisfaccion,estres\n";
+          "ingreso_pc,ingreso_lab,pc_lab,pc_sub,pc_otro,ocupado,pobre,enfermo,delito,satisfaccion,estres,"
+          "ipm,tenencia,hijos,internet,sisben\n";
     for (std::int64_t i = 0; i < p_.size(); i += paso) {
         if (!p_.vivo[i]) continue;
         const std::int32_t hid = p_.hogar_id[i];
-        int estrato = 0, tam = 0;
-        if (hid >= 0 && hid < h_.size()) { estrato = h_.estrato[hid]; tam = h_.tamano[hid]; }
+        int estrato = 0, tam = 0, ipm = 0, tenencia = 0, hijos = 0, internet = 1, sisben = 0;
+        if (hid >= 0 && hid < h_.size()) { estrato = h_.estrato[hid]; tam = h_.tamano[hid];
+            ipm = (hid < (std::int64_t)ipm_pobre_.size()) ? ipm_pobre_[hid] : 0;
+            tenencia = static_cast<int>(h_.tenencia[hid]); hijos = h_.num_menores[hid];
+            internet = h_.sin_internet[hid] ? 0 : 1; sisben = static_cast<int>(h_.sisben[hid]); }
         const std::uint16_t mi = p_.municipio_id[i];
         const int urbano = (mi < g_.mpio_urbano.size() && g_.mpio_urbano[mi] >= 0.5f) ? 1 : 0;
         os << std::stoi(g_.dpto_codigo[p_.departamento_id[i]]) << ',' << static_cast<int>(p_.sexo[i]) << ','
@@ -798,7 +852,8 @@ void Engine::exportar_muestra(std::ostream& os, int paso) {
            << (p_.situacion_laboral[i] == SituacionLaboral::Ocupado ? 1 : 0) << ','
            << (hh_pc_[i] < linea ? 1 : 0) << ',' << (p_.meses_enfermo[i] > 0 ? 1 : 0) << ','
            << static_cast<int>(p_.es_delincuente[i]) << ',' << static_cast<int>(p_.satisfaccion_vida[i]) << ','
-           << (p_.deuda[i] > par_.umbral_estres_financiero * std::max(hh_pc_[i], 1.0f) * 12.0f ? 1 : 0) << '\n';
+           << (p_.deuda[i] > par_.umbral_estres_financiero * std::max(hh_pc_[i], 1.0f) * 12.0f ? 1 : 0) << ','
+           << ipm << ',' << tenencia << ',' << hijos << ',' << internet << ',' << sisben << '\n';
     }
 }
 
@@ -806,13 +861,15 @@ void Engine::run(std::ostream& csv) {
     csv << "anio,poblacion,edad_media,desempleo,informalidad,gini_ingreso,pobreza,pobreza_extrema,"
            "tasa_desercion,prev_enfermedad,tasa_delincuencia,cobertura_educativa,"
            "pib_index,crecimiento,tasa_migracion,satisfaccion_media,polarizacion,"
-           "recaudo_pib,deficit_pib,deuda_pib,deuda_informal,estres_financiero,inflacion,trm\n";
+           "recaudo_pib,deficit_pib,deuda_pib,deuda_informal,estres_financiero,inflacion,trm,"
+           "ipm,ipm_urbano,ipm_rural\n";
 
     // estado inicial (año base): fijar empleo/ingreso primero
     mercado_laboral();
     asignar_ayuda();
     recomputar_ingreso_hogar();
     prev_pib_ = 0.0; cerrar_macro();   // fija PIB base
+    calcular_ipm();
     escribir_fila(csv, medir(cfg_.anio_inicial));
     if (perfiles_) escribir_perfiles(cfg_.anio_inicial, true);
 
@@ -836,6 +893,7 @@ void Engine::run(std::ostream& csv) {
             economia_mensual();  // KWEM
         }
         cerrar_macro();          // §8 paso 12: agrega y realimenta el ciclo
+        calcular_ipm();          // pobreza multidimensional (IPM)
         escribir_fila(csv, medir(cfg_.anio_inicial + a));
         if (perfiles_) escribir_perfiles(cfg_.anio_inicial + a, false);
     }

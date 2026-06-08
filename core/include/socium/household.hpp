@@ -29,6 +29,16 @@ struct Households {
     std::vector<std::uint8_t>      estrato;       // 1..6
     std::vector<GrupoSisben>       sisben;        // A..D
     std::vector<TenenciaVivienda>  tenencia;
+    // Privaciones materiales (IPM, consideración #3). 1 = privado. Asignadas por estrato×zona.
+    std::vector<std::uint8_t>      sin_agua;          // sin fuente de agua mejorada
+    std::vector<std::uint8_t>      sin_excretas;      // inadecuada eliminación de excretas
+    std::vector<std::uint8_t>      piso_inadec;       // pisos inadecuados
+    std::vector<std::uint8_t>      pared_inadec;      // paredes exteriores inadecuadas
+    std::vector<std::uint8_t>      hacinamiento;      // hacinamiento crítico
+    std::vector<std::uint8_t>      sin_internet;      // sin acceso a internet
+    std::vector<std::uint8_t>      barrera_priminf;   // barreras a servicios primera infancia
+    std::vector<std::uint8_t>      trabajo_infantil;  // trabajo infantil en el hogar
+    std::vector<std::uint8_t>      barrera_salud;     // barreras de acceso a salud
 
     std::int64_t size() const { return static_cast<std::int64_t>(tamano.size()); }
 };

@@ -60,7 +60,8 @@ struct MetricasAnuales {
          satisfaccion_media = 0, polarizacion = 0,
          recaudo_pib = 0, deficit_pib = 0, deuda_pib = 0,
          deuda_informal = 0, estres_financiero = 0,
-         inflacion = 0, trm = 0;
+         inflacion = 0, trm = 0,
+         ipm = 0, ipm_urbano = 0, ipm_rural = 0;
 };
 
 class Engine {
@@ -93,6 +94,7 @@ private:
     void economia_mensual();    // economía (KWEM) mensual
     void cerrar_macro();        // §8 paso 12: agrega PIB/empleo y realimenta el ciclo
     void asignar_ayuda();       // marca quién recibe ayuda informal/caridad (probabilístico)
+    void calcular_ipm();        // Índice de Pobreza Multidimensional por hogar (consideración #3)
     void recomputar_ingreso_hogar();
     void escribir_perfiles(int anio, bool header);  // agrega por perfil para consulta pública
 
@@ -117,6 +119,8 @@ private:
     double trm_ = 0.0, inflacion_ = 0.0;  // tasa de cambio e inflación
     double nivel_precios_ = 1.0;          // índice de precios acumulado (costo de vida nominal)
     double erosion_inf_ = 1.0;            // factor de erosión real del ingreso informal por IPC
+    std::vector<std::uint8_t> ipm_pobre_; // 1 si el hogar es pobre multidimensional (por hogar_id)
+    double ipm_ = 0.0, ipm_urb_ = 0.0, ipm_rur_ = 0.0;  // IPM nacional / urbano / rural
     std::ostream* perfiles_ = nullptr;  // salida opcional de perfiles por año
     const Network* red_ = nullptr;      // red social explícita (opcional)
     double sector_output_[7] = {1,1,1,1,1,1,1};  // índice de producción por sector (insumo-producto)
