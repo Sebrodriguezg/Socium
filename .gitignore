@@ -49,3 +49,6 @@ slurm-*.out
 .idea/
 .vscode/
 *.swp
+
+# Parquet de agentes (uso local; demasiado grande para gh-pages)
+web/data/agentes_*.parquet
