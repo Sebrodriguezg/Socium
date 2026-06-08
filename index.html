@@ -40,8 +40,14 @@
     <p style="font-size:12px;color:#778;margin:0 0 12px">Filtra una muestra de agentes por cualquier
       combinación. Deja "Cualquiera" lo que no quieras fijar. Resultado: promedio 2030 de quienes coinciden.</p>
     <div class="form" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr))">
-      <div><label>Edad</label><input type="number" id="aEdad" min="0" max="100" placeholder="cualquiera"></div>
-      <div><label>Sueldo mensual (COP)</label><input type="number" id="aSueldo" min="0" step="100000" placeholder="cualquiera"></div>
+      <div><label>Edad</label><select id="aEdad"><option value="">Cualquiera</option>
+        <option value="0-14">0–14</option><option value="15-24">15–24</option><option value="25-34">25–34</option>
+        <option value="35-44">35–44</option><option value="45-54">45–54</option><option value="55-64">55–64</option>
+        <option value="65-120">65+</option></select></div>
+      <div><label>Sueldo mensual</label><select id="aSueldo"><option value="">Cualquiera</option>
+        <option value="0-0">Sin ingreso laboral</option><option value="1-1000000">Hasta $1.000.000</option>
+        <option value="1000000-2000000">$1M – $2M</option><option value="2000000-4000000">$2M – $4M</option>
+        <option value="4000000-8000000">$4M – $8M</option><option value="8000000-100000000">Más de $8M</option></select></div>
       <div><label>Sexo</label><select id="aSexo"><option value="">Cualquiera</option><option value="0">Hombre</option><option value="1">Mujer</option></select></div>
       <div><label>¿Género diverso?</label><select id="aGen"><option value="">Cualquiera</option><option value="0">No</option><option value="1">Sí</option></select></div>
       <div><label>Departamento</label><select id="aDepto"><option value="">Cualquiera</option></select></div>
@@ -229,9 +235,9 @@ function consultarAvanzado(){
   const cod=document.getElementById("aDepto").value;
   if(cod!=="") filtros.push({lab:"departamento", test:r=>r[MIDX["dpto"]]===parseInt(cod)});
   const ed=document.getElementById("aEdad").value;
-  if(ed!=="") filtros.push({lab:"edad", test:r=>Math.abs(r[iE]-parseInt(ed))<=7});
+  if(ed!==""){ const [lo,hi]=ed.split("-").map(Number); filtros.push({lab:"edad", test:r=>r[iE]>=lo&&r[iE]<=hi}); }
   const su=document.getElementById("aSueldo").value;
-  if(su!=="") filtros.push({lab:"sueldo", test:r=>{const s=parseInt(su); return Math.abs(r[iLab]*1000-s)<=0.35*s;}});
+  if(su!==""){ const [lo,hi]=su.split("-").map(Number); filtros.push({lab:"sueldo", test:r=>r[iLab]*1000>=lo&&r[iLab]*1000<=hi}); }
   const EQ={sexo:"aSexo",educ:"aEduc",situacion:"aSit",estrato:"aEstrato",salud:"aSalud",
             tenencia:"aTen",internet:"aInt",sisben:"aSis",desplazado:"aDesp",genero_div:"aGen",etnia:"aEtnia",migrante:"aMig",urbano:"aUrb"};
   const ORD=["sexo","educ","situacion","estrato","tenencia","internet","sisben","desplazado","genero_div","salud","etnia","migrante","urbano"];
@@ -404,8 +410,8 @@ function whereSQL(){
   const g=id=>document.getElementById(id), W=[];
   const eq={aSexo:'sexo',aDepto:'dpto',aEduc:'educ',aSit:'situacion',aEstrato:'estrato',aSalud:'salud',aTen:'tenencia',aInt:'internet',aSis:'sisben',aDesp:'desplazado',aGen:'genero_div',aEtnia:'etnia',aMig:'migrante',aUrb:'urbano'};
   for(const [id,col] of Object.entries(eq)){ const e=g(id); if(e&&e.value!=='') W.push(`${col}=${parseInt(e.value)}`); }
-  const ed=g('aEdad').value; if(ed!=='') W.push(`abs(edad-${parseInt(ed)})<=7`);
-  const su=g('aSueldo').value; if(su!==''){ const s=parseInt(su); W.push(`abs(ingreso_lab-${s})<=${Math.round(0.35*s)}`); }
+  const ed=g('aEdad').value; if(ed!==''){ const [lo,hi]=ed.split('-').map(Number); W.push(`edad BETWEEN ${lo} AND ${hi}`); }
+  const su=g('aSueldo').value; if(su!==''){ const [lo,hi]=su.split('-').map(Number); W.push(`ingreso_lab BETWEEN ${lo} AND ${hi}`); }
   const hj=g('aHijos').value; if(hj!=='') W.push(hj==='1'?'hijos>0':'hijos=0');
   return W.length?('WHERE '+W.join(' AND ')):'';
 }
