@@ -46,7 +46,9 @@ curl -sL "https://docs.google.com/spreadsheets/d/1RlfprtEk8hGivvHPxxbsXbR7qkdZMW
 ```
 
 ## 4. DECISIONES PENDIENTES (aquí quedamos)
-1. **Alcance de la consideración #3** (atributos demográficos / IPM). Opciones que estaban sobre la mesa:
+1. **Consideración #3** (atributos demográficos / IPM): **plan detallado y listo para implementar
+   por fases en `docs/plan-consideracion-3.md`** (es el Índice de Pobreza Multidimensional del DANE).
+   Falta elegir alcance y empezar por la Fase 0. Opciones de alcance:
    - (A) **Batch rápido + IPM básico** *(recomendado)*: exponer como filtros lo que ya existe
      (tenencia, nº de hijos, SISBÉN, subsidios, estrato) + añadir internet, desplazamiento
      forzado y hacinamiento + un IPM simplificado. Sin re-correr cluster (probar a 6M, luego 50M).

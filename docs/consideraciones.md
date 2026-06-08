@@ -65,4 +65,6 @@ o arriendo?; electrodomésticos del hogar (TV, nevera, estufa, licuadora, comput
 - Requiere datos (ENCV/IPM): servicios públicos por tipo, electrodomésticos -> construir el
   **Índice de Pobreza Multidimensional (IPM, 15 indicadores/5 dimensiones, DANE)**.
 
-**Estado:** PENDIENTE (ver plan/scoping con el usuario).
+**Estado:** PENDIENTE — **plan detallado por fases listo en `docs/plan-consideracion-3.md`**
+(marco: Índice de Pobreza Multidimensional del DANE). Falta elegir alcance (A mínimo viable /
+B completo) y arrancar por la Fase 0.
