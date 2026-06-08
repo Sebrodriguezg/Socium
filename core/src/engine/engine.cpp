@@ -103,8 +103,14 @@ Engine::Engine(Population& p, Households& h, Firms& f, const Geography& g, Param
       for (std::int64_t i = 0; i < N; ++i) {
         const std::uint16_t mi = p_.municipio_id[i];
         const double conf = (mi < g_.mpio_conflicto.size()) ? g_.mpio_conflicto[mi] : 0.0;
-        p_.desplazado[i] = (uniform01() < std::min(0.35, 0.005 + 0.55 * conf)) ? 1 : 0;
-      } }
+        const bool rural = !(mi < g_.mpio_urbano.size() && g_.mpio_urbano[mi] >= 0.5f);
+        const double pr = (0.004 + 0.5 * conf) * (rural ? 1.8 : 1.0);  // el desplazamiento golpea más lo rural
+        p_.desplazado[i] = (uniform01() < std::min(0.40, pr)) ? 1 : 0;
+      }
+      // re-sembrar el RNG: el bucle anterior consumió números; así la calibración de los
+      // mecanismos (empleo, etc.) NO depende de haber añadido el desplazamiento.
+      #pragma omp parallel
+      { seed_thread_rng(cfg_.seed); } }
     leontief(VA_SHARE, xbase_);   // producción sectorial de referencia (insumo-producto)
     recomputar_ingreso_hogar();
 }
@@ -838,7 +844,7 @@ void Engine::exportar_muestra(std::ostream& os, int paso) {
     const double linea = par_.linea_pobreza_mensual;
     os << "dpto,sexo,edad,educ,situacion,estrato,salud,hogar,etnia,migrante,urbano,"
           "ingreso_pc,ingreso_lab,pc_lab,pc_sub,pc_otro,ocupado,pobre,enfermo,delito,satisfaccion,estres,"
-          "ipm,tenencia,hijos,internet,sisben,desplazado\n";
+          "ipm,tenencia,hijos,internet,sisben,desplazado,genero_div\n";
     for (std::int64_t i = 0; i < p_.size(); i += paso) {
         if (!p_.vivo[i]) continue;
         const std::int32_t hid = p_.hogar_id[i];
@@ -862,7 +868,7 @@ void Engine::exportar_muestra(std::ostream& os, int paso) {
            << static_cast<int>(p_.es_delincuente[i]) << ',' << static_cast<int>(p_.satisfaccion_vida[i]) << ','
            << (p_.deuda[i] > par_.umbral_estres_financiero * std::max(hh_pc_[i], 1.0f) * 12.0f ? 1 : 0) << ','
            << ipm << ',' << tenencia << ',' << hijos << ',' << internet << ',' << sisben << ','
-           << static_cast<int>(p_.desplazado[i]) << '\n';
+           << static_cast<int>(p_.desplazado[i]) << ',' << static_cast<int>(p_.genero_diverso[i]) << '\n';
     }
 }
 

@@ -38,7 +38,7 @@ C++20/OpenMP + Python + web estática pública. Trato neutral y simétrico.
 |---|---|---|
 | 1 | IPC/costo de vida, intereses, empleo por edad | ✅ Implementada |
 | 2 | Fuente del ingreso (laboral/subsidio/ayuda) | ✅ Implementada |
-| 3 | Atributos demográficos / pobreza multidimensional (IPM) | ✅ Implementada (alcance A) |
+| 3 | Atributos demográficos / pobreza multidimensional (IPM) | ✅ Implementada (A+B; falta 50M) |
 
 **Leer respuestas nuevas (la hoja es pública por enlace):**
 ```bash
@@ -46,11 +46,11 @@ curl -sL "https://docs.google.com/spreadsheets/d/1RlfprtEk8hGivvHPxxbsXbR7qkdZMW
 ```
 
 ## 4. DECISIONES PENDIENTES (aquí quedamos)
-1. **Consideración #3** (IPM): ✅ **IMPLEMENTADA (alcance A)** — IPM del DANE en el motor,
-   filtros y panel web, desplazamiento forzado. Datos web regenerados a 6M y publicados.
-   *Pendiente alcance B (opcional):* afinar IPM rural a ~27%, ENCV por departamento
-   (`fetch_ipm.py`), género diverso, y **re-correr a 50M en el cluster**. Ver
-   `docs/plan-consideracion-3.md` (Fase 5). Detalle de las opciones que estaban sobre la mesa:
+1. **Consideración #3** (IPM): ✅ **IMPLEMENTADA (alcance A+B)** — IPM del DANE (nacional 12.2%,
+   urbano 7.8%, rural 27%), filtros y panel web, desplazamiento forzado (sesgo rural), género
+   diverso, `fetch_ipm.py` + `ipm_departamental.csv`. Datos web a 6M publicados.
+   **Único pendiente: re-correr a 50M en el cluster** (`scripts/correr_cluster.sh 50000000 128`)
+   y publicar. Ver `docs/plan-consideracion-3.md`.
    - (A) **Batch rápido + IPM básico** *(recomendado)*: exponer como filtros lo que ya existe
      (tenencia, nº de hijos, SISBÉN, subsidios, estrato) + añadir internet, desplazamiento
      forzado y hacinamiento + un IPM simplificado. Sin re-correr cluster (probar a 6M, luego 50M).

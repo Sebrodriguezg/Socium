@@ -12,7 +12,7 @@ Respuestas del público (formulario) y cómo se incorporaron al modelo.
 |---|---|---|---|---|
 | 1 | 07-jun-2026 | Economía: IPC/costo de vida, intereses, empleo por edad | 3 | ✅ Implementada |
 | 2 | 07-jun-2026 | Economía: fuente del ingreso (laboral/subsidio/ayuda) | 3 | ✅ Implementada |
-| 3 | 07-jun-2026 | Demografía: atributos y pobreza multidimensional (IPM) | 2 | ✅ Implementada (alcance A) |
+| 3 | 07-jun-2026 | Demografía: atributos y pobreza multidimensional (IPM) | 2 | ✅ Implementada (A+B; falta solo 50M) |
 
 
 ## #1 — 2026-06-07 · yicedgarcia24@icloud.com
@@ -79,6 +79,13 @@ o arriendo?; electrodomésticos del hogar (TV, nevera, estufa, licuadora, comput
 - Calibración: IPM nacional 12.4% (DANE ~12%), urbano 6.8%, rural ~31-34% (gap realista). DANE
   monetario intacto (pobreza 0.30, Gini 0.555), 5/5 stylized facts. Cepeda baja IPM (9.5% vs 10.9%).
 
-**Pendiente (alcance B, opcional):** afinar rural a ~27% y diferenciación IPM de desplazados;
-descargar ENCV por departamento (`scripts/fetch_ipm.py`); género diverso; electrodomésticos;
-re-correr a 50M en el cluster y publicar. Ver `docs/plan-consideracion-3.md`.
+**Alcance B (hecho 08-jun-2026):**
+- IPM rural **calibrado a ~27%** (nacional 12.2%, urbano 7.8%); DANE monetario intacto.
+- Desplazamiento con **sesgo rural** → desplazados con IPM mayor que el promedio.
+- **Género diverso** (~1.3%, 15+) como atributo y filtro web.
+- `scripts/fetch_ipm.py` + `data/reference/ipm_departamental.csv` (IPM por depto, DANE 2022).
+- Aprendizaje: añadir sorteos RNG (desplazamiento/género) corría el stream y desviaba la
+  calibración del empleo → género hecho DETERMINISTA y RNG re-sembrado tras el desplazamiento.
+
+**Pendiente (único):** re-correr a **50M en el cluster** y publicar (los datos en línea son a 6M).
+Opcional: electrodomésticos; mapear `ipm_departamental.csv` dentro del motor para clavar el mapa.

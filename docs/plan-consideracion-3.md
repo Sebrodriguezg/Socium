@@ -75,7 +75,7 @@ estrato/zona es suficiente para reproducir la incidencia y la brecha urbano-rura
 
 ### Fase 0 — Datos `[ ]`
 - [x] `data/reference/privaciones_ipm.csv` con la tabla de §3.
-- [ ] (Opcional) `scripts/fetch_ipm.py` para traer ENCV/IPM por departamento de datos.gov.co.
+- [x] `scripts/fetch_ipm.py` para traer ENCV/IPM por departamento de datos.gov.co.
 - [ ] Cargar la tabla en `Geography` o en un nuevo `Parametros` (mapa estrato×zona→tasas).
 
 ### Fase 1 — Atributos materiales del hogar `[ ]`
@@ -105,7 +105,7 @@ estrato/zona es suficiente para reproducir la incidencia y la brecha urbano-rura
 
 ### Fase 4 — Atributos de vulnerabilidad extra `[ ]`
 - [x] `desplazamiento_forzado`: flag por agente, prob. atada a `mpio_conflicto` (víctimas).
-- [ ] Género: añadir categoría diversa (representación de minorías) — pequeña fracción.
+- [x] Género: categoría diversa (~1.3%, determinista) + filtro web.
 - [ ] SISBÉN puntaje/grupo refinado (A-D) y su uso en focalización de subsidios.
 
 ### Fase 5 — Validación y publicación `[ ]`
