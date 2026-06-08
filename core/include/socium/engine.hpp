@@ -92,6 +92,7 @@ private:
     void dinamica_empresas();   // §3: extorsión, quiebra y entrada de empresas
     void economia_mensual();    // economía (KWEM) mensual
     void cerrar_macro();        // §8 paso 12: agrega PIB/empleo y realimenta el ciclo
+    void asignar_ayuda();       // marca quién recibe ayuda informal/caridad (probabilístico)
     void recomputar_ingreso_hogar();
     void escribir_perfiles(int anio, bool header);  // agrega por perfil para consulta pública
 
@@ -103,6 +104,7 @@ private:
     EngineConfig     cfg_;
     Politicas        pol_;
     std::vector<float> hh_pc_;   // ingreso per cápita del hogar de cada persona
+    std::vector<float> hh_pc_lab_, hh_pc_sub_, hh_pc_otro_;  // descomposición por fuente
     // estado macro (cierre micro-macro)
     double prev_pib_ = 0.0;      // PIB agregado del año anterior
     double ciclo_ = 1.0;         // multiplicador de ciclo económico (realimenta empleo)

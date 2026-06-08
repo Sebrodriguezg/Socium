@@ -86,7 +86,7 @@ def main():
             f = RUNS / f"muestra_{esc}.csv"
             if not f.exists(): continue
             rd = csv.reader(open(f)); campos = next(rd)
-            idxs = [campos.index(c) for c in ("ingreso_pc", "ingreso_lab")]
+            idxs = [campos.index(c) for c in ("ingreso_pc","ingreso_lab","pc_lab","pc_sub","pc_otro")]
             filas = []
             for row in rd:
                 v = [int(x) for x in row]

@@ -101,32 +101,42 @@ Engine::Engine(Population& p, Households& h, Firms& f, const Geography& g, Param
     recomputar_ingreso_hogar();
 }
 
-// ingreso per cápita del hogar para cada persona (M1/M5 pobreza)
+// Marca quién recibe ayuda informal/caridad (no es garantizada: es probabilística).
+void Engine::asignar_ayuda() {
+    const std::int64_t N = p_.size();
+    #pragma omp parallel for schedule(static)
+    for (std::int64_t i = 0; i < N; ++i)
+        p_.recibe_ayuda[i] = (p_.vivo[i] && p_.edad[i] >= 18 && p_.edad[i] < 65
+            && p_.situacion_laboral[i] != SituacionLaboral::Ocupado
+            && uniform01() < par_.prob_ayuda_informal) ? 1 : 0;
+}
+
+// Ingreso per cápita del hogar DESCOMPUESTO por fuente (responde "¿de dónde sale el
+// ingreso de alguien sin empleo?"): laboral, subsidio (pensión/Colombia Mayor/transferencias)
+// y otro (remesas/rentas + ayuda informal probabilística). M1/M5 usan el total.
 void Engine::recomputar_ingreso_hogar() {
     const std::int64_t N = p_.size();
     std::int64_t maxh = 0;
     for (std::int64_t i = 0; i < N; ++i) maxh = std::max<std::int64_t>(maxh, p_.hogar_id[i] + 1);
-    std::vector<double> suma(maxh, 0.0);
-    std::vector<int>    cnt(maxh, 0);
+    std::vector<double> lab(maxh, 0.0), sub(maxh, 0.0), otro(maxh, 0.0);
+    std::vector<int> cnt(maxh, 0);
     for (std::int64_t i = 0; i < N; ++i) {
         if (!p_.vivo[i]) continue;
-        // ingreso laboral + ingresos no laborales (pensiones, subsidios, rebusque)
-        double ing = p_.ingreso_laboral[i];
-        if (p_.edad[i] >= 65) {
-            ing += (static_cast<int>(p_.nivel_educativo[i]) >= static_cast<int>(NivelEducativo::Media))
-                   ? par_.pension_contributiva : par_.colombia_mayor;
-        } else if (p_.edad[i] >= 18 && p_.situacion_laboral[i] != SituacionLaboral::Ocupado) {
-            ing += par_.subsistencia_informal;   // 'rebusque' informal de no ocupados
-        }
-        suma[p_.hogar_id[i]] += ing;
-        cnt[p_.hogar_id[i]]++;
+        const std::int32_t h = p_.hogar_id[i];
+        lab[h] += p_.ingreso_laboral[i];                       // trabajo propio
+        if (p_.edad[i] >= 65)                                  // pensión / subsidio de vejez
+            sub[h] += (static_cast<int>(p_.nivel_educativo[i]) >= static_cast<int>(NivelEducativo::Media))
+                      ? par_.pension_contributiva : par_.colombia_mayor;
+        if (p_.recibe_ayuda[i]) otro[h] += par_.subsistencia_informal;  // ayuda/rebusque/caridad
+        cnt[h]++;
     }
-    hh_pc_.assign(N, 0.0f);
+    hh_pc_.assign(N, 0.0f); hh_pc_lab_.assign(N, 0.0f); hh_pc_sub_.assign(N, 0.0f); hh_pc_otro_.assign(N, 0.0f);
     for (std::int64_t i = 0; i < N; ++i) {
-        const std::int32_t hid = p_.hogar_id[i];
-        float pc = cnt[hid] > 0 ? static_cast<float>(suma[hid] / cnt[hid]) : 0.0f;
-        // piso no laboral del hogar (calibración GEIH) + transferencias (política)
-        hh_pc_[i] = pc + static_cast<float>(par_.ingreso_no_laboral_pc + pol_.transfer_ingreso_pc);
+        const std::int32_t h = p_.hogar_id[i]; const int c = cnt[h] > 0 ? cnt[h] : 1;
+        hh_pc_lab_[i]  = static_cast<float>(lab[h] / c);
+        hh_pc_sub_[i]  = static_cast<float>(sub[h] / c + pol_.transfer_ingreso_pc);   // transferencias = subsidio
+        hh_pc_otro_[i] = static_cast<float>(otro[h] / c + par_.ingreso_no_laboral_pc); // remesas/rentas/en especie
+        hh_pc_[i] = hh_pc_lab_[i] + hh_pc_sub_[i] + hh_pc_otro_[i];
     }
 }
 
@@ -769,7 +779,7 @@ void Engine::exportar_muestra(std::ostream& os, int paso) {
     if (paso < 1) paso = 1;
     const double linea = par_.linea_pobreza_mensual;
     os << "dpto,sexo,edad,educ,situacion,estrato,salud,hogar,etnia,migrante,urbano,"
-          "ingreso_pc,ingreso_lab,ocupado,pobre,enfermo,delito,satisfaccion,estres\n";
+          "ingreso_pc,ingreso_lab,pc_lab,pc_sub,pc_otro,ocupado,pobre,enfermo,delito,satisfaccion,estres\n";
     for (std::int64_t i = 0; i < p_.size(); i += paso) {
         if (!p_.vivo[i]) continue;
         const std::int32_t hid = p_.hogar_id[i];
@@ -783,6 +793,8 @@ void Engine::exportar_muestra(std::ostream& os, int paso) {
            << tam << ',' << static_cast<int>(p_.etnia[i]) << ','
            << (p_.estatus_migratorio[i] != EstatusMigratorio::Nacional ? 1 : 0) << ',' << urbano << ','
            << static_cast<long long>(hh_pc_[i]) << ',' << static_cast<long long>(p_.ingreso_laboral[i]) << ','
+           << static_cast<long long>(hh_pc_lab_[i]) << ',' << static_cast<long long>(hh_pc_sub_[i]) << ','
+           << static_cast<long long>(hh_pc_otro_[i]) << ','
            << (p_.situacion_laboral[i] == SituacionLaboral::Ocupado ? 1 : 0) << ','
            << (hh_pc_[i] < linea ? 1 : 0) << ',' << (p_.meses_enfermo[i] > 0 ? 1 : 0) << ','
            << static_cast<int>(p_.es_delincuente[i]) << ',' << static_cast<int>(p_.satisfaccion_vida[i]) << ','
@@ -798,6 +810,7 @@ void Engine::run(std::ostream& csv) {
 
     // estado inicial (año base): fijar empleo/ingreso primero
     mercado_laboral();
+    asignar_ayuda();
     recomputar_ingreso_hogar();
     prev_pib_ = 0.0; cerrar_macro();   // fija PIB base
     escribir_fila(csv, medir(cfg_.anio_inicial));
@@ -811,6 +824,7 @@ void Engine::run(std::ostream& csv) {
         actualizar_produccion(); // insumo-producto: propaga impulsos sectoriales (Leontief)
         dinamica_empresas();     // §3: extorsión/quiebra/entrada (fija la capacidad de empleo)
         mercado_laboral();       // M2/M3 (empleo endógeno a las empresas)
+        asignar_ayuda();         // quién recibe ayuda informal/caridad (probabilístico)
         recomputar_ingreso_hogar();
         delincuencia();          // M5
         migracion();             // M-migración (§6.3)

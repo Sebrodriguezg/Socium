@@ -19,3 +19,19 @@ asociado; cómo se ven influenciados los **créditos e intereses** de la persona
 
 **Pendiente / a profundizar:** salario mínimo real diferenciado por sector; indexación de
 arriendos/servicios al IPC; curva de empleo por edad calibrada con GEIH.
+
+## #2 — 2026-06-07 · sr260035@gmail.com
+**Categoría:** Economía / trabajo / informalidad · **Severidad:** 3 (sesgo importante)
+**Inconsistencia:** una persona sin empleo aparece con ingresos sin que se sepa de dónde;
+falta implementar la FUENTE del ingreso: laboral, subsidio, o solo probabilidad de caridad.
+
+**Incorporado:**
+- **Descomposición del ingreso per cápita por fuente**: laboral (trabajo propio + de otros
+  miembros del hogar), subsidio (pensión/Colombia Mayor + transferencias de política), y
+  otro (remesas/rentas + ayuda informal). El motor calcula y exporta `pc_lab/pc_sub/pc_otro`.
+- **Ayuda/caridad probabilística**: la ayuda informal/rebusque ya NO es automática para todo
+  no-ocupado; cada uno tiene una probabilidad (`prob_ayuda_informal`) de recibirla, con un
+  monto cuando la recibe -> algunos quedan sin nada (más realista).
+- La **web** muestra ahora la composición ("· de trabajo / · de subsidios/pensión /
+  · de hogar/ayuda/otros") -> queda claro por qué un desempleado tiene (o no) ingresos.
+- DANE 2026 intacto (Gini 0.555, desempleo 10.5%, informal 0.551), 5/5 stylized facts.

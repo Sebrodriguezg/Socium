@@ -69,6 +69,7 @@ struct Population {
     std::vector<std::uint8_t>      vivo;            // 1 vivo, 0 fallecido
     std::vector<std::uint8_t>      es_delincuente;  // 0/1 (emerge por M5)
     std::vector<std::uint8_t>      meses_enfermo;   // >0 si cursa enfermedad (M4)
+    std::vector<std::uint8_t>      recibe_ayuda;    // 1 si recibe ayuda informal/caridad (probabilístico)
     // enlaces estructurales
     std::vector<std::int32_t>      hogar_id;
     std::vector<std::uint16_t>     municipio_id;      // 0..1102 (DIVIPOLA reindexado)

@@ -53,7 +53,8 @@ struct Parametros {
     // --- ingresos no laborales del hogar (para pobreza realista, M3/§2.4) ---
     Real pension_contributiva = 1'100'000.0; // jubilados con historia formal (COP/mes)
     Real colombia_mayor = 80'000.0;          // subsidio a adultos mayores vulnerables
-    Real subsistencia_informal = 380'000.0;  // rebusque de no ocupados en edad laboral
+    Real prob_ayuda_informal = 0.6;          // prob. de que un no-ocupado reciba ayuda/rebusque/caridad
+    Real subsistencia_informal = 633'000.0;  // monto de esa ayuda cuando se recibe (esperado ≈ 380k)
     Real ingreso_no_laboral_pc = 140'000.0;  // piso per cápita del hogar (transferencias/remesas/
                                              // rentas/en especie) — calibrado a pobreza GEIH/DANE
 
