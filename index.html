@@ -78,6 +78,7 @@
       <div><label>Edad</label><input type="number" id="aEdad" min="0" max="100" placeholder="cualquiera"></div>
       <div><label>Sueldo mensual (COP)</label><input type="number" id="aSueldo" min="0" step="100000" placeholder="cualquiera"></div>
       <div><label>Sexo</label><select id="aSexo"><option value="">Cualquiera</option><option value="0">Hombre</option><option value="1">Mujer</option></select></div>
+      <div><label>¿Género diverso?</label><select id="aGen"><option value="">Cualquiera</option><option value="0">No</option><option value="1">Sí</option></select></div>
       <div><label>Departamento</label><select id="aDepto"><option value="">Cualquiera</option></select></div>
       <div><label>Educación</label><select id="aEduc"><option value="">Cualquiera</option><option value="0">Baja</option><option value="1">Media</option><option value="2">Alta</option></select></div>
       <div><label>Situación</label><select id="aSit"><option value="">Cualquiera</option><option value="2">Emp. público</option><option value="3">Emp. formal</option><option value="4">Cuenta propia</option><option value="5">Informal</option><option value="6">Desempleado</option><option value="7">Inactivo/pens.</option><option value="1">Estudiante</option></select></div>
@@ -244,8 +245,8 @@ function consultarAvanzado(){
   const su=document.getElementById("aSueldo").value;
   if(su!=="") filtros.push({lab:"sueldo", test:r=>{const s=parseInt(su); return Math.abs(r[iLab]*1000-s)<=0.35*s;}});
   const EQ={sexo:"aSexo",educ:"aEduc",situacion:"aSit",estrato:"aEstrato",salud:"aSalud",
-            tenencia:"aTen",internet:"aInt",sisben:"aSis",desplazado:"aDesp",etnia:"aEtnia",migrante:"aMig",urbano:"aUrb"};
-  const ORD=["sexo","educ","situacion","estrato","tenencia","internet","sisben","desplazado","salud","etnia","migrante","urbano"];
+            tenencia:"aTen",internet:"aInt",sisben:"aSis",desplazado:"aDesp",genero_div:"aGen",etnia:"aEtnia",migrante:"aMig",urbano:"aUrb"};
+  const ORD=["sexo","educ","situacion","estrato","tenencia","internet","sisben","desplazado","genero_div","salud","etnia","migrante","urbano"];
   for(const campo of ORD){ const el=document.getElementById(EQ[campo]); if(!el) continue; const v=el.value;
     if(v!=="") filtros.push({lab:campo, test:r=>r[MIDX[campo]]===parseInt(v)}); }
   const hij=document.getElementById("aHijos"); if(hij && hij.value!=="")
