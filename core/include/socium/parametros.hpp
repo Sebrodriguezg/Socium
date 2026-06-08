@@ -53,6 +53,9 @@ struct Parametros {
     // --- ingresos no laborales del hogar (para pobreza realista, M3/§2.4) ---
     Real pension_contributiva = 1'100'000.0; // jubilados con historia formal (COP/mes)
     Real colombia_mayor = 80'000.0;          // subsidio a adultos mayores vulnerables
+    Real subsidio_joven = 120'000.0;         // monto del subsidio a jóvenes estudiantes (tipo Jóvenes en Acción)
+    Real cobertura_subsidio_joven = 0.30;    // FRACCIÓN de elegibles que lo recibe (cobertura real, no todos)
+                                             // elegibles = estudiante 16-28 + estrato<=2 + SISBÉN A/B
     Real prob_ayuda_informal = 0.6;          // prob. de que un no-ocupado reciba ayuda/rebusque/caridad
     Real subsistencia_informal = 633'000.0;  // monto de esa ayuda cuando se recibe (esperado ≈ 380k)
     Real ingreso_no_laboral_pc = 140'000.0;  // piso per cápita del hogar (transferencias/remesas/

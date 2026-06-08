@@ -189,7 +189,13 @@ void Engine::recomputar_ingreso_hogar() {
         if (p_.edad[i] >= 65)                                  // pensión / subsidio de vejez
             sub[h] += (static_cast<int>(p_.nivel_educativo[i]) >= static_cast<int>(NivelEducativo::Media))
                       ? par_.pension_contributiva : par_.colombia_mayor;
-        if (p_.recibe_ayuda[i]) otro[h] += par_.subsistencia_informal;  // ayuda/rebusque/caridad
+        else if (p_.asiste_escuela[i] && p_.edad[i] >= 16 && p_.edad[i] <= 28 && h < h_.size()
+                 && h_.estrato[h] <= 2                                   // condición socioeconómica: estrato
+                 && (h_.sisben[h] == GrupoSisben::A || h_.sisben[h] == GrupoSisben::B)  // y SISBÉN A/B
+                 && (static_cast<std::uint64_t>(i) * 0xD1B54A33ULL >> 12) % 1000
+                        < static_cast<std::uint64_t>(par_.cobertura_subsidio_joven * 1000))  // solo una fracción
+            sub[h] += par_.subsidio_joven;                     // subsidio a joven estudiante vulnerable (cobertura parcial)
+        if (p_.recibe_ayuda[i]) otro[h] += par_.subsistencia_informal;  // ayuda de papás/rebusque/caridad
         cnt[h]++;
     }
     hh_pc_.assign(N, 0.0f); hh_pc_lab_.assign(N, 0.0f); hh_pc_sub_.assign(N, 0.0f); hh_pc_otro_.assign(N, 0.0f);
