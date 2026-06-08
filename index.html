@@ -246,9 +246,12 @@ function consultarAvanzado(){
     const res={}; let nmin=1e9;
     for(const esc of MUESTRA.escenarios){
       const arr=MUESTRA.datos[esc]; let n=0,ing=0,sat=0,acc={}; cols.forEach(c=>acc[c[0]]=0);
+      let lab=0,sub=0,otro=0;
       for(const row of arr){ let ok=true; for(const f of fs){ if(!f.test(row)){ok=false;break;} } if(!ok) continue;
-        n++; ing+=row[iIng]; sat+=row[MIDX["satisfaccion"]]; cols.forEach(c=>acc[c[0]]+=row[MIDX[c[0]]]); }
-      res[esc]={n, ing:n?ing/n*1000:0, sat:n?sat/n:0, acc:Object.fromEntries(cols.map(c=>[c[0],n?acc[c[0]]/n:0]))};
+        n++; ing+=row[iIng]; sat+=row[MIDX["satisfaccion"]]; cols.forEach(c=>acc[c[0]]+=row[MIDX[c[0]]]);
+        lab+=row[MIDX["pc_lab"]]; sub+=row[MIDX["pc_sub"]]; otro+=row[MIDX["pc_otro"]]; }
+      res[esc]={n, ing:n?ing/n*1000:0, sat:n?sat/n:0, lab:n?lab/n*1000:0, sub:n?sub/n*1000:0, otro:n?otro/n*1000:0,
+                acc:Object.fromEntries(cols.map(c=>[c[0],n?acc[c[0]]/n:0]))};
       nmin=Math.min(nmin,n);
     }
     return {res,nmin};
@@ -268,9 +271,12 @@ function consultarAvanzado(){
     let h=`<td>${lab}</td>`; vals.forEach((v,k)=>h+=`<td class="${v===best?'best':''}">${fmt(lab,v)}</td>`);
     const tr=document.createElement("tr"); tr.innerHTML=h; tb.appendChild(tr);
   }
-  function fmt(lab,v){ if(lab.includes("Ingreso")) return "$"+Math.round(v).toLocaleString("es-CO");
+  function fmt(lab,v){ if(lab.includes("Ingreso")||lab.includes("·")) return "$"+Math.round(v).toLocaleString("es-CO");
     if(lab.includes("Satisf")) return v.toFixed(1); return (v*100).toFixed(1)+"%"; }
   fila("Ingreso por persona", r=>r.ing, true);
+  fila("  · de trabajo", r=>r.lab, true);
+  fila("  · de subsidios/pensión", r=>r.sub, true);
+  fila("  · de hogar/ayuda/otros", r=>r.otro, true);
   cols.forEach(c=>fila(c[1], r=>r.acc[c[0]], c[0]==="ocupado"));
   fila("Satisfacción (0-10)", r=>r.sat, true);
   document.getElementById("aTabla").style.display="table";
