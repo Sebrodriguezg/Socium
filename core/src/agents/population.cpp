@@ -17,7 +17,7 @@ void Population::resize(std::int64_t n) {
     ingreso_laboral.resize(N); riqueza.resize(N); deuda.resize(N); afiliacion_salud.resize(N);
     confianza.resize(N); participa_org.resize(N); religiosidad.resize(N);
     opinion_politica.resize(N); satisfaccion_vida.resize(N); estatus_migratorio.resize(N);
-    vivo.resize(N); es_delincuente.resize(N); meses_enfermo.resize(N); recibe_ayuda.resize(N);
+    vivo.resize(N); es_delincuente.resize(N); meses_enfermo.resize(N); recibe_ayuda.resize(N); desplazado.resize(N);
     hogar_id.resize(N); municipio_id.resize(N); departamento_id.resize(N);
 }
 
@@ -34,7 +34,7 @@ std::int64_t Population::nacer(Sexo s, std::int32_t hogar, std::uint16_t municip
     confianza.push_back(0); participa_org.push_back(0); religiosidad.push_back(Religiosidad::Catolica);
     opinion_politica.push_back(0); satisfaccion_vida.push_back(5);
     estatus_migratorio.push_back(EstatusMigratorio::Nacional);
-    vivo.push_back(1); es_delincuente.push_back(0); meses_enfermo.push_back(0); recibe_ayuda.push_back(0);
+    vivo.push_back(1); es_delincuente.push_back(0); meses_enfermo.push_back(0); recibe_ayuda.push_back(0); desplazado.push_back(0);
     hogar_id.push_back(hogar); municipio_id.push_back(municipio); departamento_id.push_back(depto);
     return size() - 1;
 }
@@ -147,7 +147,7 @@ Population build_synthetic(std::int64_t n, std::uint64_t seed) {
             : EstatusMigratorio::Nacional;
 
         // estados dinámicos iniciales
-        p.vivo[i] = 1; p.es_delincuente[i] = 0; p.meses_enfermo[i] = 0; p.recibe_ayuda[i] = 0;
+        p.vivo[i] = 1; p.es_delincuente[i] = 0; p.meses_enfermo[i] = 0; p.recibe_ayuda[i] = 0; p.desplazado[i] = 0;
 
         // Geografía (placeholder uniforme; se reemplaza por DIVIPOLA real).
         p.departamento_id[i] = static_cast<std::uint8_t>(U(rng) * 33);

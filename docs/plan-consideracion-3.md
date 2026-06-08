@@ -74,37 +74,37 @@ estrato/zona es suficiente para reproducir la incidencia y la brecha urbano-rura
 ## 4. Fases (implementar en orden; cada una compila y verifica)
 
 ### Fase 0 — Datos `[ ]`
-- [ ] `data/reference/privaciones_ipm.csv` con la tabla de §3.
+- [x] `data/reference/privaciones_ipm.csv` con la tabla de §3.
 - [ ] (Opcional) `scripts/fetch_ipm.py` para traer ENCV/IPM por departamento de datos.gov.co.
 - [ ] Cargar la tabla en `Geography` o en un nuevo `Parametros` (mapa estrato×zona→tasas).
 
 ### Fase 1 — Atributos materiales del hogar `[ ]`
-- [ ] En `Households` (o `Population`) añadir flags por hogar: `sin_agua`, `sin_excretas`,
+- [x] En `Households` (o `Population`) añadir flags por hogar: `sin_agua`, `sin_excretas`,
       `piso_inadecuado`, `pared_inadecuada`, `hacinamiento`, `sin_internet`,
       `barrera_priminfancia`, `trabajo_infantil`, `barrera_salud`. (uint8, 1 = privado.)
-- [ ] Asignación al construir los hogares: `prob = privaciones_ipm[estrato][zona]` y sortear
+- [x] Asignación al construir los hogares: `prob = privaciones_ipm[estrato][zona]` y sortear
       cada flag (correlacionados con estrato/zona). Recordar `resize`/`push_back`/init.
-- [ ] Exponer también lo que ya existe: `tenencia` (propia/arriendo), `n_hijos` (menores del
+- [x] Exponer también lo que ya existe: `tenencia` (propia/arriendo), `n_hijos` (menores del
       hogar), `sisben_grupo` (A-D desde el puntaje).
 
 ### Fase 2 — Cálculo del IPM `[ ]`
-- [ ] En `engine.cpp`, función `calcular_ipm()` (anual): por hogar, sumar pesos de las
+- [x] En `engine.cpp`, función `calcular_ipm()` (anual): por hogar, sumar pesos de las
       privaciones (los ✅ se derivan del estado; los ➕ de los flags) → `privacion_pct`.
       Hogar pobre multidimensional si `privacion_pct ≥ 1/3`.
-- [ ] Métrica nacional `ipm` (y `ipm_urbano`, `ipm_rural`) en `MetricasAnuales` + CSV + serie.
-- [ ] **Calibrar** las tasas de §3 hasta IPM nacional ≈ 12%, rural ≈ 27%, urbano ≈ 8%.
-- [ ] Verificar que pobreza monetaria, Gini y 5/5 stylized facts NO se rompen.
+- [x] Métrica nacional `ipm` (y `ipm_urbano`, `ipm_rural`) en `MetricasAnuales` + CSV + serie.
+- [x] **Calibrar** las tasas de §3 hasta IPM nacional ≈ 12%, rural ≈ 27%, urbano ≈ 8%.
+- [x] Verificar que pobreza monetaria, Gini y 5/5 stylized facts NO se rompen.
 
 ### Fase 3 — Web (filtros + visualización) `[ ]`
-- [ ] `exportar_muestra`: añadir columnas `ipm_pobre`, `tenencia`, `n_hijos`, `internet`,
+- [x] `exportar_muestra`: añadir columnas `ipm_pobre`, `tenencia`, `n_hijos`, `internet`,
       `sisben`, `desplazado`, y la composición de privaciones.
-- [ ] `build_web_data.py`: incluir los nuevos campos en `muestra.json`.
-- [ ] `web/index.html` (consulta avanzada): filtros nuevos (tenencia, hijos, internet, SISBÉN,
+- [x] `build_web_data.py`: incluir los nuevos campos en `muestra.json`.
+- [x] `web/index.html` (consulta avanzada): filtros nuevos (tenencia, hijos, internet, SISBÉN,
       desplazado) + mostrar **"Pobreza multidimensional (IPM)"** y el desglose de privaciones.
-- [ ] Panel macro / mapa: añadir IPM como variable seleccionable (urbano vs rural).
+- [x] Panel macro / mapa: añadir IPM como variable seleccionable (urbano vs rural).
 
 ### Fase 4 — Atributos de vulnerabilidad extra `[ ]`
-- [ ] `desplazamiento_forzado`: flag por agente, prob. atada a `mpio_conflicto` (víctimas).
+- [x] `desplazamiento_forzado`: flag por agente, prob. atada a `mpio_conflicto` (víctimas).
 - [ ] Género: añadir categoría diversa (representación de minorías) — pequeña fracción.
 - [ ] SISBÉN puntaje/grupo refinado (A-D) y su uso en focalización de subsidios.
 

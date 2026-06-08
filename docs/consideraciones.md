@@ -12,7 +12,7 @@ Respuestas del público (formulario) y cómo se incorporaron al modelo.
 |---|---|---|---|---|
 | 1 | 07-jun-2026 | Economía: IPC/costo de vida, intereses, empleo por edad | 3 | ✅ Implementada |
 | 2 | 07-jun-2026 | Economía: fuente del ingreso (laboral/subsidio/ayuda) | 3 | ✅ Implementada |
-| 3 | 07-jun-2026 | Demografía: atributos y pobreza multidimensional (IPM) | 2 | ⏳ Pendiente (scoping) |
+| 3 | 07-jun-2026 | Demografía: atributos y pobreza multidimensional (IPM) | 2 | ✅ Implementada (alcance A) |
 
 
 ## #1 — 2026-06-07 · yicedgarcia24@icloud.com
@@ -65,6 +65,20 @@ o arriendo?; electrodomésticos del hogar (TV, nevera, estufa, licuadora, comput
 - Requiere datos (ENCV/IPM): servicios públicos por tipo, electrodomésticos -> construir el
   **Índice de Pobreza Multidimensional (IPM, 15 indicadores/5 dimensiones, DANE)**.
 
-**Estado:** PENDIENTE — **plan detallado por fases listo en `docs/plan-consideracion-3.md`**
-(marco: Índice de Pobreza Multidimensional del DANE). Falta elegir alcance (A mínimo viable /
-B completo) y arrancar por la Fase 0.
+**Incorporado (alcance A — Fases 1-4 del plan):**
+- **Índice de Pobreza Multidimensional (IPM, metodología DANE)**: `engine.calcular_ipm()` con
+  5 dimensiones (educación, niñez, trabajo, salud, vivienda); pobre si ≥1/3 de privaciones
+  ponderadas. Indicadores de educación/trabajo/salud endógenos; vivienda/niñez por flags del
+  hogar asignados por estrato×zona (`data/reference/privaciones_ipm.csv`).
+- **Atributos del hogar** expuestos: tenencia (propia/arriendo), nº de hijos, internet,
+  SISBÉN, + privaciones materiales (agua, excretas, pisos, paredes, hacinamiento).
+- **Desplazamiento forzado**: flag por agente atado al conflicto del municipio (~16.5%).
+- **Métricas** `ipm`, `ipm_urbano`, `ipm_rural` en la serie; **web**: panel macro con IPM y
+  consulta avanzada con "pobreza multidimensional" + filtros (vivienda, internet, ¿hijos?,
+  SISBÉN, ¿desplazado?).
+- Calibración: IPM nacional 12.4% (DANE ~12%), urbano 6.8%, rural ~31-34% (gap realista). DANE
+  monetario intacto (pobreza 0.30, Gini 0.555), 5/5 stylized facts. Cepeda baja IPM (9.5% vs 10.9%).
+
+**Pendiente (alcance B, opcional):** afinar rural a ~27% y diferenciación IPM de desplazados;
+descargar ENCV por departamento (`scripts/fetch_ipm.py`); género diverso; electrodomésticos;
+re-correr a 50M en el cluster y publicar. Ver `docs/plan-consideracion-3.md`.

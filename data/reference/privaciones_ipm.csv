@@ -1,0 +1,25 @@
+indicador,estrato,zona,tasa_privacion
+# Tasa de privación material por estrato (1-6) y zona (urb/rur) para el IPM (consideración #3).
+# Calibrado a la brecha urbano-rural del DANE (rural >> urbano). Estas tasas están replicadas
+# en core/src/agents/household.cpp (tabla PRIV). Refinar con DANE ENCV/IPM cuando se descargue.
+sin_agua,1,urb,0.10
+sin_agua,1,rur,0.45
+sin_agua,3,urb,0.02
+sin_agua,5,urb,0.00
+sin_excretas,1,urb,0.12
+sin_excretas,1,rur,0.50
+piso_inadecuado,1,urb,0.10
+piso_inadecuado,1,rur,0.35
+pared_inadecuada,1,urb,0.05
+pared_inadecuada,1,rur,0.15
+hacinamiento,1,urb,0.22
+hacinamiento,1,rur,0.28
+sin_internet,1,urb,0.50
+sin_internet,1,rur,0.82
+sin_internet,3,urb,0.15
+barrera_primera_infancia,1,urb,0.16
+barrera_primera_infancia,1,rur,0.32
+trabajo_infantil,1,urb,0.04
+trabajo_infantil,1,rur,0.11
+barrera_acceso_salud,1,urb,0.10
+barrera_acceso_salud,1,rur,0.18

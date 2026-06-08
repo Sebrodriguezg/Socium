@@ -97,6 +97,14 @@ Engine::Engine(Population& p, Households& h, Firms& f, const Geography& g, Param
     std::int32_t mh = 0;
     for (std::int64_t i = 0; i < p_.size(); ++i) mh = std::max(mh, p_.hogar_id[i] + 1);
     next_hogar_id_ = mh;
+    // desplazamiento forzado (consideración #3): prob. atada al conflicto del municipio
+    { const std::int64_t N = p_.size();
+      #pragma omp parallel for schedule(static)
+      for (std::int64_t i = 0; i < N; ++i) {
+        const std::uint16_t mi = p_.municipio_id[i];
+        const double conf = (mi < g_.mpio_conflicto.size()) ? g_.mpio_conflicto[mi] : 0.0;
+        p_.desplazado[i] = (uniform01() < std::min(0.35, 0.005 + 0.55 * conf)) ? 1 : 0;
+      } }
     leontief(VA_SHARE, xbase_);   // producción sectorial de referencia (insumo-producto)
     recomputar_ingreso_hogar();
 }
@@ -830,7 +838,7 @@ void Engine::exportar_muestra(std::ostream& os, int paso) {
     const double linea = par_.linea_pobreza_mensual;
     os << "dpto,sexo,edad,educ,situacion,estrato,salud,hogar,etnia,migrante,urbano,"
           "ingreso_pc,ingreso_lab,pc_lab,pc_sub,pc_otro,ocupado,pobre,enfermo,delito,satisfaccion,estres,"
-          "ipm,tenencia,hijos,internet,sisben\n";
+          "ipm,tenencia,hijos,internet,sisben,desplazado\n";
     for (std::int64_t i = 0; i < p_.size(); i += paso) {
         if (!p_.vivo[i]) continue;
         const std::int32_t hid = p_.hogar_id[i];
@@ -853,7 +861,8 @@ void Engine::exportar_muestra(std::ostream& os, int paso) {
            << (hh_pc_[i] < linea ? 1 : 0) << ',' << (p_.meses_enfermo[i] > 0 ? 1 : 0) << ','
            << static_cast<int>(p_.es_delincuente[i]) << ',' << static_cast<int>(p_.satisfaccion_vida[i]) << ','
            << (p_.deuda[i] > par_.umbral_estres_financiero * std::max(hh_pc_[i], 1.0f) * 12.0f ? 1 : 0) << ','
-           << ipm << ',' << tenencia << ',' << hijos << ',' << internet << ',' << sisben << '\n';
+           << ipm << ',' << tenencia << ',' << hijos << ',' << internet << ',' << sisben << ','
+           << static_cast<int>(p_.desplazado[i]) << '\n';
     }
 }
 
