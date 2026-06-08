@@ -2,6 +2,19 @@
 
 Respuestas del público (formulario) y cómo se incorporaron al modelo.
 
+**Formulario:** https://forms.gle/FMZbfYk64mKCBCQz8
+**Hoja de respuestas (pública por enlace):** https://docs.google.com/spreadsheets/d/1RlfprtEk8hGivvHPxxbsXbR7qkdZMW5_MhhU_Eobfpc/edit
+**Leer las respuestas (sin login, export CSV):**
+`curl -sL "https://docs.google.com/spreadsheets/d/1RlfprtEk8hGivvHPxxbsXbR7qkdZMW5_MhhU_Eobfpc/export?format=csv"`
+
+## Estado
+| # | Fecha | Categoría | Severidad | Estado |
+|---|---|---|---|---|
+| 1 | 07-jun-2026 | Economía: IPC/costo de vida, intereses, empleo por edad | 3 | ✅ Implementada |
+| 2 | 07-jun-2026 | Economía: fuente del ingreso (laboral/subsidio/ayuda) | 3 | ✅ Implementada |
+| 3 | 07-jun-2026 | Demografía: atributos y pobreza multidimensional (IPM) | 2 | ⏳ Pendiente (scoping) |
+
+
 ## #1 — 2026-06-07 · yicedgarcia24@icloud.com
 **Categoría:** Economía / trabajo / informalidad · **Severidad:** 3 (sesgo importante)
 **Falta:** tener en cuenta el incremento del IPC y del salario mínimo, y el **costo de vida**
