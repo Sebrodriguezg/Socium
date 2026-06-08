@@ -89,6 +89,7 @@
       <div><label>SISBÉN</label><select id="aSis"><option value="">Cualquiera</option><option value="1">Grupo A</option><option value="2">Grupo B</option><option value="3">Grupo C</option><option value="4">Grupo D</option></select></div>
       <div><label>Etnia</label><select id="aEtnia"><option value="">Cualquiera</option><option value="0">Ninguna</option><option value="1">Indígena</option><option value="2">Afro (NARP)</option></select></div>
       <div><label>¿Migrante?</label><select id="aMig"><option value="">Cualquiera</option><option value="0">No</option><option value="1">Sí</option></select></div>
+      <div><label>¿Desplazado?</label><select id="aDesp"><option value="">Cualquiera</option><option value="0">No</option><option value="1">Sí</option></select></div>
       <div><label>Zona</label><select id="aUrb"><option value="">Cualquiera</option><option value="1">Urbana</option><option value="0">Rural</option></select></div>
       <button onclick="consultarAvanzado()">Calcular</button>
     </div>
@@ -243,8 +244,8 @@ function consultarAvanzado(){
   const su=document.getElementById("aSueldo").value;
   if(su!=="") filtros.push({lab:"sueldo", test:r=>{const s=parseInt(su); return Math.abs(r[iLab]*1000-s)<=0.35*s;}});
   const EQ={sexo:"aSexo",educ:"aEduc",situacion:"aSit",estrato:"aEstrato",salud:"aSalud",
-            tenencia:"aTen",internet:"aInt",sisben:"aSis",etnia:"aEtnia",migrante:"aMig",urbano:"aUrb"};
-  const ORD=["sexo","educ","situacion","estrato","tenencia","internet","sisben","salud","etnia","migrante","urbano"];
+            tenencia:"aTen",internet:"aInt",sisben:"aSis",desplazado:"aDesp",etnia:"aEtnia",migrante:"aMig",urbano:"aUrb"};
+  const ORD=["sexo","educ","situacion","estrato","tenencia","internet","sisben","desplazado","salud","etnia","migrante","urbano"];
   for(const campo of ORD){ const el=document.getElementById(EQ[campo]); if(!el) continue; const v=el.value;
     if(v!=="") filtros.push({lab:campo, test:r=>r[MIDX[campo]]===parseInt(v)}); }
   const hij=document.getElementById("aHijos"); if(hij && hij.value!=="")
